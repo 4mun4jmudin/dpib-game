@@ -1,0 +1,1374 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BIM (Building Information Modeling) - Game MPLS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@400;600&display=swap"
+        rel="stylesheet">
+    <style>
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            background-color: #020208;
+            font-family: 'Inter', sans-serif;
+            user-select: none;
+            touch-action: none;
+            overscroll-behavior: none;
+        }
+
+        .font-cyber {
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 1;
+        }
+
+        .ui-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        .modal-bg {
+            background: rgba(2, 2, 8, 0.9);
+            backdrop-filter: blur(10px);
+            pointer-events: auto;
+        }
+
+        .crt-scanline {
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            background-size: 100% 4px, 3px 100%;
+            pointer-events: none;
+            z-index: 5;
+            position: absolute;
+            inset: 0;
+        }
+
+        .pop-in {
+            animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        @keyframes popIn {
+            from {
+                transform: scale(0.7) translateY(20px);
+                opacity: 0;
+            }
+
+            to {
+                transform: scale(1) translateY(0);
+                opacity: 1;
+            }
+        }
+
+        #boss-warning {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 50;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2.5rem;
+            color: #ef4444;
+            text-shadow: 0 0 30px rgba(239, 68, 68, 0.8);
+            animation: bossWarn 0.5s ease-in-out infinite alternate;
+            pointer-events: none;
+            display: none;
+        }
+
+        @keyframes bossWarn {
+            from {
+                opacity: 0.5;
+                transform: translate(-50%, -50%) scale(0.95);
+            }
+
+            to {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1.05);
+            }
+        }
+    </style>
+</head>
+
+<body class="text-white">
+    <canvas id="gameCanvas"></canvas>
+    <div class="crt-scanline"></div>
+    <div id="boss-warning">⚠️ BOSS DATA MENDEKATI! ⚠️</div>
+
+    <!-- HUD -->
+    <div class="ui-layer flex flex-row justify-between p-4 md:p-6 md:px-10 px-4 items-start pointer-events-none">
+        <div>
+            <h2
+                class="font-cyber text-xl md:text-3xl text-cyan-400 font-bold drop-shadow-[0_0_10px_rgba(34,211,238,0.8)]">
+                BIM MANAGER</h2>
+            <p class="text-[10px] md:text-sm text-cyan-200 tracking-widest mt-1 hidden md:block">BUILDING INFORMATION
+                MODELING</p>
+            <p class="text-xs text-slate-400 mt-1 md:mt-2">Level: <span id="level-display">1</span> / 25</p>
+        </div>
+        <div class="text-right">
+            <div class="font-cyber text-lg md:text-2xl text-yellow-400 mb-1">SCORE: <span id="score-display">0</span>
+            </div>
+            <div class="text-[10px] md:text-lg text-green-400 font-cyber">DATA: <span id="materi-display">0</span>/25 📚
+            </div>
+            <div
+                class="mt-1 md:mt-2 w-32 md:w-48 h-4 md:h-5 bg-slate-800 rounded-full border border-cyan-500/50 overflow-hidden relative shadow-[0_0_10px_rgba(34,211,238,0.2)] ml-auto">
+                <div id="health-bar-fill" class="h-full bg-green-500 transition-all duration-300" style="width: 100%">
+                </div>
+                <div id="health-text"
+                    class="absolute inset-0 text-[9px] md:text-[11px] font-bold text-center flex items-center justify-center text-white drop-shadow-md font-cyber tracking-wider">
+                    100 / 100</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MENU SCREEN -->
+    <div id="screen-menu" class="ui-layer modal-bg flex flex-col items-center justify-center">
+        <h1
+            class="font-cyber text-4xl md:text-5xl text-cyan-400 font-black mb-2 tracking-wider text-center drop-shadow-[0_0_15px_rgba(34,211,238,0.8)] uppercase">
+            PENGANTAR BIM</h1>
+        <h2 class="text-xl md:text-2xl text-white font-semibold mb-6 text-center tracking-wide">(Building Information
+            Modeling)</h2>
+        <div
+            class="bg-slate-800/80 border-2 border-cyan-500/50 p-6 rounded-xl max-w-2xl text-center mb-8 shadow-[0_0_20px_rgba(34,211,238,0.2)]">
+            <p class="text-lg text-slate-200 mb-4">Kamu adalah BIM Manager! Bersihkan model 3D dari benturan (Clash) dan
+                selesaikan tantangan Data!</p>
+            <div class="grid grid-cols-2 gap-4 text-left bg-slate-900/50 p-4 rounded-lg">
+                <div>
+                    <h3 class="text-cyan-400 font-bold mb-2 uppercase tracking-wide">🎮 Cara Main:</h3>
+                    <ul class="text-sm text-slate-300 space-y-2">
+                        <li>Sentuh dan <b>Geser Layar</b> (atau WASD/Panah) untuk Bergerak</li>
+                        <li>Kapal menembak secara <b>Otomatis</b></li>
+                        <li>Ambil item <b>(+)</b> untuk darah.</li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="text-yellow-400 font-bold mb-2 uppercase tracking-wide">🎯 Sistem Boss (Kuis):</h3>
+                    <ul class="text-sm text-slate-300 space-y-2 list-disc pl-4">
+                        <li>Hadapi <b>25 BOSS DATA</b> di setiap level.</li>
+                        <li>Jawab kuis dengan <b>BENAR</b> = Boss melemah.</li>
+                        <li>Jawab <b>SALAH</b> = Boss HP tebal & nembak brutal!</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="mb-4 text-center" id="menu-stats" style="display:none;">
+            <p class="text-sm text-slate-400">High Score: <span id="menu-highscore" class="text-yellow-400 font-bold">0</span></p>
+            <p class="text-sm text-slate-400">Gelar Terbaik: <span id="menu-rating" class="text-cyan-400 font-bold">-</span></p>
+        </div>
+        <div class="flex gap-4">
+            <button onclick="startGame()"
+                class="font-cyber text-2xl bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-4 px-8 md:px-12 rounded shadow-[0_0_20px_rgba(34,211,238,0.6)] hover:shadow-[0_0_30px_rgba(34,211,238,1)] transition-all transform hover:scale-105 active:scale-95">
+                MULAI PROYEK
+            </button>
+            <button onclick="showLibrary()"
+                class="font-cyber text-2xl bg-slate-700 hover:bg-slate-600 text-white font-bold py-4 px-6 rounded shadow-[0_0_20px_rgba(100,116,139,0.6)] hover:shadow-[0_0_30px_rgba(100,116,139,1)] transition-all transform hover:scale-105 active:scale-95" title="Perpustakaan Data">
+                📚
+            </button>
+        </div>
+    </div>
+
+    <!-- MATERI MODAL -->
+    <div id="screen-materi" class="ui-layer modal-bg flex items-center justify-center hidden">
+        <div
+            class="bg-slate-900 border-2 border-yellow-500 p-6 rounded-2xl max-w-3xl w-full mx-4 shadow-[0_0_40px_rgba(234,179,8,0.4)] pop-in relative h-[90vh] overflow-y-auto">
+            <div class="text-center mt-2">
+                <div class="text-5xl mb-2" id="materi-icon">🏗️</div>
+                <h2 class="font-cyber text-2xl font-black text-yellow-400 mb-2" id="materi-title">Judul Materi</h2>
+                <div class="w-16 h-1 bg-cyan-500 mx-auto mb-4 rounded"></div>
+                <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 mb-4 text-left">
+                    <p class="text-slate-200 text-sm leading-relaxed whitespace-pre-line" id="materi-desc">Deskripsi
+                        materi.</p>
+                </div>
+                <div class="bg-slate-950 p-4 rounded-xl border-2 border-cyan-500 mb-4 text-left shadow-inner">
+                    <p class="text-cyan-400 font-bold mb-2 uppercase text-sm">⚡ Analisis Data: Jawab untuk melemahkan
+                        sistem keamanan Boss!</p>
+                    <p class="text-white text-lg mb-4 font-semibold" id="materi-question">Pertanyaannya apa?</p>
+                    <div class="flex justify-end mb-2 hidden" id="hint-container">
+                        <button id="btn-hint" onclick="useHint()" class="bg-yellow-600 hover:bg-yellow-500 text-white font-bold py-1 px-4 rounded text-sm shadow-[0_0_10px_rgba(202,138,4,0.5)] transition-all">
+                            🔍 Gunakan Hint (Sisa: <span id="hint-count">0</span>)
+                        </button>
+                    </div>
+                    <div class="flex flex-col gap-3" id="quiz-options"></div>
+                    <div id="quiz-feedback" class="hidden text-center mt-4 p-3 rounded font-bold transition-all"></div>
+                </div>
+                <button id="btn-resume" onclick="resumeGame()"
+                    class="hidden font-cyber text-xl bg-red-600 hover:bg-red-500 text-white font-bold py-3 px-10 rounded shadow-[0_0_15px_rgba(220,38,38,0.5)] transition-all active:scale-95 w-full">
+                    HADAPI BOSS! ⚔️
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- END SCREEN -->
+    <div id="screen-end" class="ui-layer modal-bg flex flex-col items-center justify-center hidden">
+        <h1 class="font-cyber text-5xl md:text-6xl font-black mb-4 text-center pop-in" id="end-title">GAME OVER</h1>
+        <p class="text-xl text-slate-300 mb-8 max-w-xl text-center" id="end-desc">Kapalmu hancur.</p>
+        <div class="text-center mb-8 bg-slate-900/80 p-6 rounded-xl border border-slate-700">
+            <p class="text-cyan-400 font-cyber mb-2 text-xl tracking-wider" id="end-rating">PANGKAT</p>
+            <p class="text-slate-400 font-cyber mb-2">FINAL SCORE</p>
+            <p class="text-6xl font-bold text-yellow-400 drop-shadow-lg" id="end-score">0</p>
+            <div class="mt-4 flex gap-4 justify-center text-sm">
+                <div class="bg-green-900/50 text-green-400 px-4 py-2 rounded border border-green-500">Benar: <span id="end-correct" class="font-bold">0</span></div>
+                <div class="bg-red-900/50 text-red-400 px-4 py-2 rounded border border-red-500">Salah: <span id="end-wrong" class="font-bold">0</span></div>
+            </div>
+        </div>
+        <div class="flex gap-4">
+            <button onclick="resetGame()"
+                class="font-cyber text-xl bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-3 px-8 rounded shadow-[0_0_15px_rgba(34,211,238,0.5)] transition-all active:scale-95">
+                MAIN KEMBALI
+            </button>
+            <button id="btn-review" onclick="showReview()"
+                class="font-cyber text-xl bg-slate-700 hover:bg-slate-600 text-white font-bold py-3 px-8 rounded shadow-[0_0_15px_rgba(100,116,139,0.5)] transition-all active:scale-95 hidden">
+                PEMBAHASAN
+            </button>
+        </div>
+    </div>
+
+    <!-- LIBRARY MODAL -->
+    <div id="screen-library" class="ui-layer modal-bg flex flex-col items-center justify-center hidden">
+        <div class="bg-slate-900 border-2 border-slate-500 p-6 rounded-2xl max-w-4xl w-full mx-4 shadow-[0_0_40px_rgba(100,116,139,0.4)] relative h-[85vh] flex flex-col pop-in">
+            <h2 class="font-cyber text-3xl font-black text-cyan-400 mb-6 text-center">📚 PERPUSTAKAAN DATA BIM</h2>
+            <div id="library-list" class="flex-1 overflow-y-auto pr-2 space-y-4"></div>
+            <button onclick="hideLibrary()" class="mt-6 font-cyber text-xl bg-red-600 hover:bg-red-500 text-white font-bold py-3 px-10 rounded shadow-[0_0_15px_rgba(220,38,38,0.5)] transition-all active:scale-95 mx-auto block">KEMBALI KE MENU</button>
+        </div>
+    </div>
+
+    <!-- REVIEW MODAL -->
+    <div id="screen-review" class="ui-layer modal-bg flex flex-col items-center justify-center hidden">
+        <div class="bg-slate-900 border-2 border-red-500 p-6 rounded-2xl max-w-4xl w-full mx-4 shadow-[0_0_40px_rgba(239,68,68,0.4)] relative h-[85vh] flex flex-col pop-in">
+            <h2 class="font-cyber text-3xl font-black text-red-400 mb-6 text-center">❌ REVIEW KESALAHAN</h2>
+            <div id="review-list" class="flex-1 overflow-y-auto pr-2 space-y-4"></div>
+            <button onclick="document.getElementById('screen-review').classList.add('hidden')" class="mt-6 font-cyber text-xl bg-slate-600 hover:bg-slate-500 text-white font-bold py-3 px-10 rounded transition-all active:scale-95 mx-auto block">TUTUP</button>
+        </div>
+    </div>
+
+    <script>
+        // ============================================================
+        // DATA MATERI & KUIS BIM (25 soal)
+        // ============================================================
+        const MATERI_DATA = [
+            {
+                title: `Materi 1: Tantangan Industri Arsitektur, Teknik, dan Konstruksi (AEC)`,
+                text: `Selama berpuluh-puluh tahun, industri AEC dikenal memiliki tingkat adopsi teknologi yang lambat dan sangat terfragmentasi. Setiap disiplin ilmu (arsitek, struktur, MEP) cenderung bekerja sendiri-sendiri (dalam "silo") menggunakan dokumen fisik atau gambar 2D. Hal ini rentan menyebabkan miskomunikasi di lapangan, yang berujung pada masalah klasik konstruksi: pembengkakan biaya ( *cost overrun* ), keterlambatan jadwal, dan pemborosan material.`,
+                question: `Masalah klasik apa yang sering muncul di industri konstruksi akibat sistem kerja yang terfragmentasi dan masih mengandalkan gambar 2D?`,
+                options: ["A. Siklus pengerjaan proyek yang terlalu cepat", "B. Efisiensi penggunaan material yang berlebihan", "C. Pembengkakan biaya ( *cost overrun* ) dan keterlambatan jadwal", "D. Terlalu banyaknya integrasi data antar disiplin ilmu"],
+                correct: 2
+            },
+            {
+                title: `Materi 2: Pengertian Fundamental BIM`,
+                text: `Banyak yang salah paham bahwa BIM hanyalah *software* 3D. Menurut *National BIM Standard-United States* (NBIMS-US), BIM adalah representasi digital dari karakteristik fisik dan fungsional suatu fasilitas. Model ini berfungsi sebagai sumber informasi yang dapat dibagikan dan menjadi dasar pengambilan keputusan yang andal sejak fase konsep awal, desain, konstruksi, hingga pembongkaran.`,
+                question: `Berdasarkan standar NBIMS-US, BIM paling tepat dideskripsikan sebagai...`,
+                options: ["A. Sekadar perangkat lunak ( *software* ) untuk membuat render 3D yang indah", "B. Representasi digital dari karakteristik fisik dan fungsional suatu fasilitas sebagai sumber informasi", "C. Mesin otomatis untuk mencetak gambar kerja 2D secara masal", "D. Format file standar yang hanya digunakan oleh arsitek"],
+                correct: 1
+            },
+            {
+                title: `Materi 3: Tiga Elemen Kunci BIM (Building, Information, Modeling)`,
+                text: `BIM terdiri dari tiga elemen kunci. *Building* merujuk pada objek fisik yang dirancang (gedung, jembatan, dll). *Information* adalah jantung dari BIM, di mana setiap elemen memiliki "kecerdasan" atau metadata (misal: spesifikasi material, harga, dimensi). Sedangkan *Modeling* merujuk pada proses kerja kolaboratif secara dinamis, bukan sekadar memproduksi gambar statis.`,
+                question: `Manakah dari tiga elemen BIM yang sering disebut sebagai "jantung" dari metode BIM karena menyimpan metadata seperti dimensi, material, dan pabrikan?`,
+                options: ["A. Building", "B. Information", "C. Modeling", "D. Management"],
+                correct: 1
+            },
+            {
+                title: `Materi 4: Perbedaan Paradigma CAD vs BIM`,
+                text: `Transisi dari CAD ke BIM adalah perubahan dari *drafting* (menggambar garis) ke *modeling* (membangun secara virtual). Dalam CAD tradisional, memindahkan dinding di denah mengharuskan kita memperbarui gambar potongan secara manual. Dalam BIM, model bersifat  *parametrik* . Memindahkan dinding di satu tampilan akan otomatis dan instan memperbarui semua tampilan lainnya, termasuk laporan volume material.`,
+                question: `Apa keunggulan utama sistem pemodelan parametrik pada BIM dibandingkan sistem CAD tradisional?`,
+                options: ["A. File yang dihasilkan ukurannya jauh lebih kecil", "B. Perubahan pada satu tampilan akan otomatis memperbarui tampilan lain secara instan", "C. Hanya membutuhkan spesifikasi komputer yang rendah", "D. Tidak memerlukan kemampuan membaca gambar teknik"],
+                correct: 1
+            },
+            {
+                title: `Materi 5: Konsep Embrio BIM (Era 1970-an)`,
+                text: `Konsep awal BIM sudah dicetuskan jauh sebelum komputer modern ada. Pada pertengahan 1970-an, Profesor Charles (Chuck) Eastman dari Georgia Tech mengembangkan sistem bernama *Building Description System* (BDS). Ia mengusulkan agar desainer berinteraksi dengan "elemen yang dapat dihitung secara komputasi" alih-alih menggambar garis, yang mana ide ini menjadi pondasi BIM modern.`,
+                question: `Siapakah tokoh yang sering dianggap sebagai pelopor konsep awal BIM dengan mengembangkan *Building Description System* (BDS) pada tahun 1970-an?`,
+                options: ["A. Jerry Laiserin", "B. Charles (Chuck) Eastman", "C. Steve Jobs", "D. Frank Lloyd Wright"],
+                correct: 1
+            },
+            {
+                title: `Materi 6: Lahirnya Perangkat Lunak Objek (Era 1980-an)`,
+                text: `Pada pertengahan 1980-an, perangkat lunak komersial pertama yang menerapkan konsep BIM mulai bermunculan. Di Eropa, Graphisoft merilis *Radar CH* (1984) yang kemudian berevolusi menjadi ArchiCAD. Di saat yang sama, konsep desain mekanikal parametrik dipelopori oleh Pro/ENGINEER. Ini menandai dimulainya era transisi dari menggambar 2D ke memodelkan objek 3D secara komersial.`,
+                question: `Perangkat lunak apa yang dirilis pada tahun 1984 oleh Graphisoft dan sering diakui sebagai salah satu *software* komersial pertama yang menerapkan konsep awal BIM?`,
+                options: ["A. AutoCAD", "B. Revit", "C. SketchUp", "D. Radar CH (ArchiCAD)"],
+                correct: 3
+            },
+            {
+                title: `Materi 7: Masalah Interoperabilitas dan buildingSMART`,
+                text: `Pada era 1990-an, banyak vendor membuat *software* 3D, namun muncul masalah besar: file dari *software* A tidak bisa dibuka di *software* B tanpa kehilangan data. Untuk mengatasi ini, dibentuklah *International Alliance for Interoperability* (IAI) yang kini dikenal sebagai  **buildingSMART** . Tujuannya adalah menciptakan standar format pertukaran data yang terbuka untuk seluruh industri.`,
+                question: `Organisasi apa yang dibentuk untuk mengatasi masalah interoperabilitas dan mempromosikan standar format data terbuka di industri AEC?`,
+                options: ["A. National Institute of Standards and Technology (NIST)", "B. buildingSMART (sebelumnya IAI)", "C. American Institute of Architects (AIA)", "D. International Organization for Standardization (ISO)"],
+                correct: 1
+            },
+            {
+                title: `Materi 8: Standar Format IFC (Industry Foundation Classes)`,
+                text: `Hasil utama dari organisasi buildingSMART adalah format file  **IFC** . IFC adalah format standar terbuka (open-source) internasional yang digunakan untuk berbagi model BIM lintas  *software* . Dengan IFC, seorang arsitek yang menggunakan ArchiCAD dapat mengirimkan modelnya kepada insinyur struktur yang menggunakan Tekla tanpa kehilangan informasi "kecerdasan" dasar pada objek bangunan tersebut.`,
+                question: `Format file standar terbuka (open-source) yang dikembangkan untuk memungkinkan pertukaran model BIM antar berbagai merek *software* yang berbeda adalah...`,
+                options: ["A. .DWG", "B. .RVT", "C. .IFC", "D. .PDF"],
+                correct: 2
+            },
+            {
+                title: `Materi 9: Dimensi BIM - BIM 3D (Visualisasi & Deteksi Benturan)`,
+                text: `Dimensi BIM tidak berhenti di 3D. Namun, BIM 3D sendiri sangat penting. Selain untuk visualisasi fotorealistik yang membantu klien awam memahami desain, BIM 3D digunakan untuk *Clash Detection* (Deteksi Benturan). Komputer secara otomatis mendeteksi jika ada tabrakan antar elemen fisik sebelum dibangun, misalnya pipa AC yang menabrak balok beton struktural.`,
+                question: `Fungsi utama dari implementasi BIM 3D pada fase pra-konstruksi yang dapat mencegah pembongkaran paksa di lapangan akibat tabrakan pipa dan struktur adalah...`,
+                options: ["A. Quantity Take-Off (QTO)", "B. Clash Detection (Deteksi Benturan)", "C. Penjadwalan Proyek", "D. Analisis Energi"],
+                correct: 1
+            },
+            {
+                title: `Materi 10: Dimensi BIM - BIM 4D (Integrasi Penjadwalan / Waktu)`,
+                text: `BIM 4D menambahkan elemen "Waktu" ( *Time* ). Model 3D dihubungkan dengan jadwal proyek (seperti kurva S atau  *Gantt Chart* ). Dengan BIM 4D, manajer proyek dapat melakukan simulasi urutan konstruksi secara visual. Hal ini memungkinkan pemantauan visual progres proyek minggu demi minggu dan pengaturan tata letak logistik (seperti posisi *crane* dan penumpukan material).`,
+                question: `Dimensi BIM ke-4 (BIM 4D) mengintegrasikan model bangunan 3D dengan aspek apa?`,
+                options: ["A. Estimasi Biaya RAB", "B. Jadwal dan Waktu Pelaksanaan Konstruksi", "C. Analisis Beban Angin", "D. Manajemen Operasional Gedung"],
+                correct: 1
+            },
+            {
+                title: `Materi 11: Dimensi BIM - BIM 5D (Estimasi Biaya)`,
+                text: `BIM 5D menambahkan elemen "Biaya" ( *Cost* ). Karena setiap elemen dalam model BIM menyimpan informasi volume, dimensi, dan material, proses perhitungan volume material atau *Quantity Take-Off* (QTO) dapat dilakukan secara otomatis. Jika desain berubah, volume material dan Rencana Anggaran Biaya (RAB) akan diperbarui secara dinamis dan  *real-time* .`,
+                question: `Seorang *Quantity Surveyor* (QS) menggunakan model BIM untuk mengekstrak volume material beton dan baja secara otomatis guna menghitung RAB. Ini adalah penerapan dari...`,
+                options: ["A. BIM 3D", "B. BIM 4D", "C. BIM 5D", "D. BIM 6D"],
+                correct: 2
+            },
+            {
+                title: `Materi 12: Dimensi BIM - BIM 6D (Keberlanjutan / Sustainability)`,
+                text: `BIM 6D berfokus pada analisis *Sustainability* (Keberlanjutan) dan performa bangunan. Pada tahap ini, model digunakan untuk mensimulasikan pencahayaan matahari, konsumsi energi, arah angin, serta jejak karbon dari material yang digunakan. Tujuannya adalah menciptakan bangunan yang efisien energi dan memenuhi standar *Green Building* sebelum konstruksi dimulai.`,
+                question: `Apabila seorang arsitek ingin menyimulasikan radiasi matahari tahunan untuk menentukan jenis kaca yang paling hemat energi pada fasad bangunan, dimensi BIM mana yang sedang diterapkan?`,
+                options: ["A. BIM 4D", "B. BIM 5D", "C. BIM 6D", "D. BIM 7D"],
+                correct: 2
+            },
+            {
+                title: `Materi 13: Dimensi BIM - BIM 7D (Manajemen Fasilitas / Facility Management)`,
+                text: `Dimensi terakhir, BIM 7D, digunakan setelah bangunan selesai dikerjakan (Fase Operasional). Pemilik gedung menerima model *As-Built* digital yang berfungsi sebagai *Digital Twin* (kembaran digital). Jika ada pompa air yang rusak, teknisi gedung cukup mengklik elemen pompa di model untuk melihat vendor, masa garansi, dan jadwal perawatannya tanpa harus mencari dokumen fisik.`,
+                question: `BIM 7D sangat berguna bagi pemilik bangunan atau *Building Manager* setelah proyek selesai dikonstruksi karena dimensi ini berkaitan dengan...`,
+                options: ["A. Pembuatan tender dan pelelangan", "B. Manajemen Fasilitas ( *Facility Management* ) dan Pemeliharaan", "C. Analisis daya dukung tanah", "D. Pencetakan 3D bangunan"],
+                correct: 1
+            },
+            {
+                title: `Materi 14: Nilai Tambah (Kelebihan) Penggunaan BIM`,
+                text: `Salah satu nilai tambah atau kelebihan paling krusial dari penerapan BIM adalah reduksi biaya akibat *Rework* (kerja ulang di lapangan). Memperbaiki desain yang bentrok di dalam model komputer jauh lebih murah dibandingkan membongkar dinding beton yang sudah terlanjur dicor di lapangan. Selain itu, BIM menciptakan *Single Source of Truth* yang menjamin transparansi data.`,
+                question: `Keuntungan finansial terbesar dari penerapan koordinasi BIM di fase desain dan pra-konstruksi adalah...`,
+                options: ["A. Menghilangkan kebutuhan untuk menyewa kontraktor", "B. Menghindari biaya kerja ulang ( *rework* ) yang mahal di lapangan akibat tabrakan elemen", "C. Mendapatkan subsidi pajak dari pemerintah", "D. Menghilangkan fungsi arsitek sepenuhnya"],
+                correct: 1
+            },
+            {
+                title: `Materi 15: Tantangan Finansial dalam Adopsi BIM (CapEx)`,
+                text: `Meskipun manfaatnya besar, adopsi BIM terhambat oleh besarnya Belanja Modal awal (*Capital Expenditure* / CapEx). Lisensi perangkat lunak BIM sangat mahal dan biasanya menggunakan sistem berlangganan. Selain itu, BIM membutuhkan investasi perangkat keras ( *Hardware* ) berupa komputer *Workstation* dengan spesifikasi tinggi (Prosesor multi-core, RAM sangat besar, dan GPU mahal).`,
+                question: `Hambatan implementasi BIM dari sisi teknis dan finansial yang paling sering dikeluhkan oleh perusahaan skala kecil adalah...`,
+                options: ["A. Mahalnya biaya lisensi *software* dan kebutuhan komputer spesifikasi tinggi", "B. Tidak adanya koneksi internet di lapangan", "C. Material konstruksi yang terlalu mahal", "D. Penolakan dari pihak perbankan"],
+                correct: 0
+            },
+            {
+                title: `Materi 16: Tantangan Kurva Pembelajaran dan SDM BIM`,
+                text: `Selain tantangan perangkat, industri menghadapi tantangan Sumber Daya Manusia (SDM). Mengubah kebiasaan seorang *drafter* 2D menjadi *BIM Modeler* atau *BIM Coordinator* membutuhkan pelatihan yang intensif dan berbulan-bulan (Kurva Pembelajaran yang curam). Tenaga ahli tersertifikasi BIM masih langka, sehingga perusahaan harus berinvestasi besar pada  *training* .`,
+                question: `Istilah yang tepat untuk menggambarkan kesulitan dan lamanya waktu yang dibutuhkan oleh karyawan konvensional untuk menguasai alur kerja BIM adalah...`,
+                options: ["A. Clash detection", "B. Kurva pembelajaran ( *Learning curve* ) yang curam", "C. Interoperabilitas", "D. Rework"],
+                correct: 1
+            },
+            {
+                title: `Materi 17: Tantangan Psikologis dan Budaya Kerja (IPD)`,
+                text: `BIM menuntut kolaborasi dan keterbukaan data sejak hari pertama (konsep *Integrated Project Delivery* - IPD). Ini menabrak budaya konvensional industri AEC, di mana desainer seringkali menyembunyikan progres kerjanya dari disiplin lain sampai desain tersebut benar-benar selesai demi menghindari kritik. Mengubah pola pikir individual menjadi kolaboratif terbuka adalah tantangan tersulit.`,
+                question: `Apa tantangan non-teknis terbesar dalam penerapan BIM terkait kebiasaan pekerja di industri AEC?`,
+                options: ["A. Kesulitan mengetik di keyboard", "B. Kesulitan membedakan warna pada monitor", "C. Mengubah budaya kerja \"silo\" dan rahasia menjadi budaya kerja kolaboratif dan transparan", "D. Ketidakmampuan membaca bahasa asing"],
+                correct: 2
+            },
+            {
+                title: `Materi 18: Isu Legal dan Kepemilikan Model (Hak Kekayaan Intelektual)`,
+                text: `Ketika banyak disiplin ilmu bekerja di satu model BIM terpusat (kolaboratif), muncul wilayah abu-abu secara hukum. Siapa yang memiliki Hak Kekayaan Intelektual ( *Intellectual Property* ) atas model tersebut? Jika arsitek salah memasukkan metadata material, dan kontraktor membeli barang yang salah berdasarkan data tersebut, kontrak konvensional kesulitan menentukan siapa yang menanggung kerugian.`,
+                question: `Salah satu masalah legal dan kontraktual yang sering muncul dalam penerapan model BIM kolaboratif terpusat adalah...`,
+                options: ["A. Pembagian jadwal piket di lapangan", "B. Penentuan siapa pemegang Hak Kekayaan Intelektual dan pihak yang menanggung risiko kesalahan data", "C. Harga sewa alat berat", "D. Masa berlaku Izin Mendirikan Bangunan (IMB)"],
+                correct: 1
+            },
+            {
+                title: `Materi 19: Taksonomi Software BIM - BIM Authoring Tools`,
+                text: `Dalam ekosistem BIM, perangkat lunak dibagi sesuai fungsinya. *BIM Authoring Tools* adalah perangkat lunak tempat pembuatan atau pemodelan awal geometri 3D dan pengisian data parametriknya. Aplikasi ini digunakan untuk menciptakan model dari nol. Contoh yang paling dominan di dunia adalah Autodesk Revit, Graphisoft ArchiCAD, dan Tekla Structures.`,
+                question: `Kategori perangkat lunak yang digunakan oleh arsitek atau insinyur untuk membuat, menggambar, dan merancang model 3D bangunan dari nol disebut...`,
+                options: ["A. BIM Review Tools", "B. BIM Analysis Tools", "C. BIM Authoring Tools", "D. Common Data Environment"],
+                correct: 2
+            },
+            {
+                title: `Materi 20: Keunggulan Autodesk Revit (Authoring Tool)`,
+                text: `Autodesk Revit saat ini mendominasi pasar *Authoring Tool* BIM. Keunggulan utamanya adalah ia memiliki tiga modul sekaligus dalam satu platform:  *Architecture, Structure* , dan  *MEP* . Hal ini memudahkan sebuah perusahaan konsultan multidisiplin untuk bekerja di dalam satu ekosistem perangkat lunak yang sama tanpa harus repot melakukan konversi file.`,
+                question: `Alasan utama mengapa Autodesk Revit sangat populer sebagai *software* BIM di perusahaan konsultan multidisiplin adalah...`,
+                options: ["A. Aplikasinya gratis dan open-source", "B. Memiliki modul terintegrasi untuk Arsitektur, Struktur, dan MEP dalam satu platform", "C. Tidak memerlukan spesifikasi komputer tinggi", "D. Hanya digunakan khusus untuk pemodelan baja ringan"],
+                correct: 1
+            },
+            {
+                title: `Materi 21: Keunggulan Tekla Structures (Authoring Tool)`,
+                text: `Sementara Revit unggul dalam kelengkapan disiplin, Tekla Structures (dari Trimble) adalah standar emas global untuk *detailing* struktur spesifik, khususnya struktur baja ( *steel detailing* ) dan beton pracetak. Tekla mampu memodelkan hingga ke tingkat detail mur, baut, dan las dengan akurasi sangat tinggi (LOD tinggi) yang siap dihubungkan langsung ke mesin pabrikasi otomatis.`,
+                question: `Perangkat lunak BIM *Authoring* yang secara luas diakui sebagai standar industri terbaik (gold standard) di seluruh dunia untuk *detailing* struktur baja dan fabrikasi adalah...`,
+                options: ["A. ArchiCAD", "B. SketchUp", "C. Tekla Structures", "D. Lumion"],
+                correct: 2
+            },
+            {
+                title: `Materi 22: Taksonomi Software BIM - BIM Coordination Tools`,
+                text: `Setelah model dibuat di *Authoring tools* oleh berbagai konsultan yang berbeda, file-file tersebut harus digabungkan. Di sinilah *BIM Coordination Tools* bekerja. Perangkat lunak ini tidak digunakan untuk menggambar, melainkan untuk menggabungkan model 3D, memutarnya dengan ringan, dan menjalankan  *Clash Detection* . Contoh paling populer adalah Autodesk Navisworks dan Solibri.`,
+                question: `Perangkat lunak seperti Autodesk Navisworks difokuskan untuk tugas apa dalam alur kerja BIM?`,
+                options: ["A. Mendesain bentuk fasad bangunan dari nol", "B. Menggabungkan banyak model dari berbagai disiplin untuk melakukan koordinasi dan deteksi benturan ( *clash detection* )", "C. Melakukan perhitungan rencana anggaran biaya manual", "D. Mendesain brosur pemasaran properti"],
+                correct: 1
+            },
+            {
+                title: `Materi 23: BIM Analysis Tools (Simulasi Rekayasa)`,
+                text: `Model 3D yang sudah dibuat dapat diekspor ke *BIM Analysis Tools* untuk dilakukan komputasi dan uji teknis. Terdapat *software* untuk analisis kekuatan struktur (seperti SAP2000, ETABS, atau Robot Structural Analysis) dan ada juga *software* untuk analisis lingkungan/energi (seperti Sefaira atau IESVE) untuk menghitung radiasi matahari, pencahayaan alami, dan beban pendingin ruangan.`,
+                question: `Jika seorang *Mechanical Engineer* (ME) ingin mensimulasikan efisiensi energi, beban pendingin udara, dan pencahayaan alami menggunakan model BIM, perangkat lunak yang paling relevan masuk ke dalam kategori...`,
+                options: ["A. BIM Authoring Tools", "B. BIM Analysis Tools (Energi & Lingkungan)", "C. Common Data Environment", "D. BIM 4D Scheduling"],
+                correct: 1
+            },
+            {
+                title: `Materi 24: Common Data Environment (CDE)`,
+                text: `*Common Data Environment* (CDE) adalah brankas digital dan platform kolaborasi berbasis *cloud* (internet). CDE menjadi satu-satunya sumber kebenaran ( *Single Source of Truth* ) di proyek. Seluruh file model BIM, gambar 2D, dokumen kontrak, dan komunikasi proyek ( *Approval* , RFI) disimpan di CDE dengan hak akses yang diatur secara ketat.`,
+                question: `Apa fungsi utama dari *Common Data Environment* (CDE) dalam manajemen proyek BIM?`,
+                options: ["A. Sebagai *software* untuk menggambar denah rumah 2D", "B. Sebagai platform penyimpan data terpusat berbasis *cloud* yang menyimpan seluruh dokumen teknis dan model secara aman", "C. Sebagai aplikasi untuk merender video presentasi", "D. Sebagai perangkat keras server fisik di lapangan"],
+                correct: 1
+            },
+            {
+                title: `Materi 25: Contoh Platform CDE di Industri`,
+                text: `Untuk memfasilitasi kerja terpusat, berbagai perusahaan teknologi merilis platform CDE unggulan mereka. Autodesk memiliki *Autodesk Construction Cloud* (ACC / dulunya BIM 360). Trimble menawarkan *Trimble Connect* yang terintegrasi sangat baik dengan Tekla. Bentley memiliki *ProjectWise* yang tangguh untuk infrastruktur masif berskala negara, dan ada juga *Dalux* yang populer karena mudah diakses via *smartphone* di lapangan.`,
+                question: `Berikut ini yang BUKAN merupakan contoh dari platform perangkat lunak *Common Data Environment* (CDE) komersial adalah...`,
+                options: ["A. Autodesk Construction Cloud (ACC)", "B. Trimble Connect", "C. Bentley ProjectWise", "D. Microsoft Word"],
+                correct: 3
+            },
+        ];
+
+        // ============================================================
+        // IMAGE ASSETS
+        // ============================================================
+        const IMG = { players: [], enemies: [], bosses: [] };
+        // Load multiple player ships
+        [1, 4, 5, 6].forEach(i => {
+            let img = new Image(); img.src = `img/kapal_pemain (${i}).png`;
+            IMG.players.push(img);
+        });
+        // Load enemy ships
+        [1, 5, 6, 7, 8, 9, 10].forEach(i => {
+            let img = new Image(); img.src = `img/kapal_musuh (${i}).png`;
+            IMG.enemies.push(img);
+        });
+        // Load boss ships (1 to 14)
+        for (let i = 1; i <= 14; i++) {
+            let img = new Image(); img.src = `img/bos (${i}).png`;
+            IMG.bosses.push(img);
+        }
+
+        // ============================================================
+        // CANVAS
+        // ============================================================
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        let W = window.innerWidth, H = window.innerHeight;
+        function resize() { canvas.width = W = window.innerWidth; canvas.height = H = window.innerHeight; }
+        window.addEventListener('resize', resize);
+        resize();
+
+        // ============================================================
+        // AUDIO (Tone.js)
+        // ============================================================
+        let audioReady = false;
+        let sfx = {};
+        function initAudio() {
+            if (audioReady) return;
+            sfx.laser = new Tone.Synth({ oscillator: { type: 'square' }, envelope: { attack: 0.01, decay: 0.1, sustain: 0, release: 0.01 } }).toDestination();
+            sfx.laser.volume.value = -15;
+            sfx.explode = new Tone.NoiseSynth({ noise: { type: 'brown' }, envelope: { attack: 0.01, decay: 0.3, sustain: 0 } }).toDestination();
+            sfx.explode.volume.value = -10;
+            sfx.hit = new Tone.MembraneSynth().toDestination();
+            sfx.hit.volume.value = -5;
+            sfx.success = new Tone.PolySynth(Tone.Synth).toDestination();
+            sfx.success.volume.value = -8;
+            sfx.bgm = new Tone.FMSynth({ harmonicity: 0.5, modulationIndex: 1.2, oscillator: { type: "sawtooth" }, modulation: { type: "square" }, envelope: { attack: 0.01, decay: 0.2, sustain: 0.1, release: 0.5 } }).toDestination();
+            sfx.bgm.volume.value = -25;
+            const notes = ["C2", "C2", "Eb2", "C2", "F2", "C2", "Eb2", "Bb1"];
+            let step = 0;
+            sfx.loop = new Tone.Loop(t => { sfx.bgm.triggerAttackRelease(notes[step], "16n", t); step = (step + 1) % notes.length; }, "8n");
+            sfx.loop.start(0);
+            Tone.Transport.bpm.value = 130;
+            audioReady = true;
+        }
+        let lastSfx = { laser: 0, explode: 0, hit: 0, success: 0 };
+        function snd(type) {
+            if (!audioReady || Tone.context.state !== 'running') return;
+            let now = Tone.now();
+            if (type === 'laser' && now - lastSfx.laser > 0.05) { sfx.laser.triggerAttackRelease("E5", "32n", now); lastSfx.laser = now; }
+            if (type === 'explode' && now - lastSfx.explode > 0.1) { sfx.explode.triggerAttackRelease("16n", now); lastSfx.explode = now; }
+            if (type === 'hit' && now - lastSfx.hit > 0.1) { sfx.hit.triggerAttackRelease("C2", "8n", now); lastSfx.hit = now; }
+            if (type === 'success' && now - lastSfx.success > 0.5) { sfx.success.triggerAttackRelease(["C4", "E4", "G4", "C5"], "8n", now); lastSfx.success = now; }
+        }
+
+        // ============================================================
+        // GAME STATE
+        // ============================================================
+        let gState = 'menu';
+        let score = 0, hp = 100, maxHP = 100;
+        let correctAnswers = 0, wrongAnswers = 0;
+        let wrongQuestions = [];
+        let playerHints = 0;
+        let correctStreak = 0;
+        
+        let lsData = { highScore: 0, unlockedLevels: 1, bestRating: '-' };
+        function loadData() {
+            try {
+                let d = localStorage.getItem('bimGameData');
+                if (d) {
+                    lsData = JSON.parse(d);
+                    document.getElementById('menu-highscore').innerText = lsData.highScore;
+                    document.getElementById('menu-rating').innerText = lsData.bestRating;
+                    document.getElementById('menu-stats').style.display = 'block';
+                }
+            } catch (e) {}
+        }
+        function saveData() {
+            try {
+                localStorage.setItem('bimGameData', JSON.stringify(lsData));
+            } catch (e) {}
+        }
+        function getRating(correct) {
+            if (correct >= 23) return "Expert BIM Manager";
+            if (correct >= 16) return "BIM Coordinator";
+            if (correct >= 6) return "Junior BIM Modeler";
+            return "Traditional 2D Drafter";
+        }
+
+        let level = 0;            // 0-24 = boss/materi index
+        let dist = 0, lastWD = 0; // distance tracking
+        let bossActive = false;
+        let curBoss = null;
+        let quizOK = false;
+        let lastT = 0, gridOff = 0;
+
+        // Object arrays
+        let player = {};
+        let bullets = [], eBullets = [], bBullets = [];
+        let ships = [], rocks = [], bosses = [];
+        let particles = [], hpItems = [], shieldItems = [], hintItems = [];
+        let stars = [];
+
+        // Init stars
+        for (let i = 0; i < 120; i++) {
+            stars.push({ x: Math.random() * W, y: Math.random() * H, s: Math.random() * 2 + 0.5, sp: Math.random() * 50 + 20 });
+        }
+
+        // UI refs
+        const scr = {
+            menu: document.getElementById('screen-menu'),
+            materi: document.getElementById('screen-materi'),
+            end: document.getElementById('screen-end'),
+            library: document.getElementById('screen-library'),
+            review: document.getElementById('screen-review')
+        };
+        function hideAll() { Object.values(scr).forEach(s => { if(s) s.classList.add('hidden'); }); }
+
+        function showLibrary() {
+            hideAll();
+            const list = document.getElementById('library-list');
+            list.innerHTML = '';
+            MATERI_DATA.forEach((m, i) => {
+                const locked = i >= lsData.unlockedLevels;
+                const div = document.createElement('div');
+                div.className = 'bg-slate-800 p-4 rounded-xl border border-slate-700 flex flex-col gap-2';
+                if (locked) {
+                    div.innerHTML = `<div class="text-xl font-bold text-slate-500">🔒 Materi ${i+1} (Terkunci)</div>`;
+                } else {
+                    div.innerHTML = `<div class="text-cyan-400 font-bold text-xl">${m.title}</div>
+                                     <div class="text-slate-300 text-sm whitespace-pre-line">${m.text}</div>`;
+                }
+                list.appendChild(div);
+            });
+            scr.library.classList.remove('hidden');
+        }
+        function hideLibrary() {
+            hideAll();
+            scr.menu.classList.remove('hidden');
+        }
+        function showReview() {
+            const list = document.getElementById('review-list');
+            list.innerHTML = '';
+            if (wrongQuestions.length === 0) {
+                list.innerHTML = '<div class="text-center text-slate-400 mt-10">Tidak ada jawaban salah! Luar biasa!</div>';
+            } else {
+                wrongQuestions.forEach(idx => {
+                    const m = MATERI_DATA[idx];
+                    const div = document.createElement('div');
+                    div.className = 'bg-slate-800 p-4 rounded-xl border border-red-500/50 flex flex-col gap-2';
+                    div.innerHTML = `<div class="text-red-400 font-bold mb-1">Pertanyaan ${idx+1}:</div>
+                                     <div class="text-white text-sm font-semibold">${m.question}</div>
+                                     <div class="text-green-400 text-sm mt-2">Jawaban Benar: <br><b>${m.options[m.correct]}</b></div>`;
+                    list.appendChild(div);
+                });
+            }
+            scr.review.classList.remove('hidden');
+        }
+
+        function updateHUD() {
+            document.getElementById('score-display').innerText = score;
+            document.getElementById('level-display').innerText = Math.min(25, level + 1);
+            document.getElementById('materi-display').innerText = level;
+            let pct = Math.max(0, (hp / maxHP) * 100);
+            document.getElementById('health-bar-fill').style.width = pct + '%';
+            document.getElementById('health-text').innerText = Math.ceil(hp) + ' / ' + maxHP;
+            let fill = document.getElementById('health-bar-fill');
+            fill.className = 'h-full transition-all duration-300 ' +
+                (pct > 50 ? 'bg-green-500' : pct > 25 ? 'bg-yellow-500' : 'bg-red-500 animate-pulse');
+        }
+
+        // ============================================================
+        // INPUT
+        // ============================================================
+        let keys = {};
+        let tStart = null, tCur = null;
+        window.addEventListener('keydown', e => keys[e.key.toLowerCase()] = true);
+        window.addEventListener('keyup', e => keys[e.key.toLowerCase()] = false);
+        canvas.addEventListener('touchstart', e => { e.preventDefault(); tStart = { x: e.touches[0].clientX, y: e.touches[0].clientY }; tCur = { ...tStart }; }, { passive: false });
+        canvas.addEventListener('touchmove', e => { e.preventDefault(); if (tStart) tCur = { x: e.touches[0].clientX, y: e.touches[0].clientY }; }, { passive: false });
+        canvas.addEventListener('touchend', () => { tStart = null; tCur = null; });
+        canvas.addEventListener('mousedown', e => { tStart = { x: e.clientX, y: e.clientY }; tCur = { ...tStart }; });
+        canvas.addEventListener('mousemove', e => { if (tStart) tCur = { x: e.clientX, y: e.clientY }; });
+        canvas.addEventListener('mouseup', () => { tStart = null; tCur = null; });
+
+        // ============================================================
+        // DIFFICULTY SCALING (level 0-24)
+        // ============================================================
+        function diff() {
+            let lv = level;
+            return {
+                // Musuh kecil (diperbanyak dan dipercepat sedikit)
+                eCount: 3 + Math.floor(lv / 4),
+                eHP: 1 + Math.floor(lv / 8),
+                eSpeed: 60 + lv * 5,
+                eShootInt: Math.max(0.6, 2.0 - lv * 0.05),
+                // Batu (diperbanyak dan dipercepat)
+                rCount: 2 + Math.floor(lv / 5),
+                rSpeed: 50 + lv * 6,
+                // Boss jawab BENAR (mudah)
+                bHP_easy: 80 + lv * 20,
+                bShootInt_easy: Math.max(0.6, 1.5 - lv * 0.03),
+                bBulletN_easy: 1,
+                bBulletSpd_easy: 100 + lv * 3,
+                // Boss jawab SALAH (brutal)
+                bHP_hard: 300 + lv * 60,
+                bShootInt_hard: Math.max(0.25, 0.8 - lv * 0.02),
+                bBulletN_hard: 2 + Math.floor(lv / 7),
+                bBulletSpd_hard: 140 + lv * 6,
+                bSpeed: 30 + lv * 3,
+                // Jarak antar boss (diperpanjang 5x lipat agar fase awal lebih lama)
+                distPerLv: 2500 + lv * 150,
+                // Interval wave (diperpendek agar musuh lebih sering/padat muncul)
+                waveInt: Math.max(80, 160 - lv * 5),
+            };
+        }
+
+        // ============================================================
+        // SPAWN FUNCTIONS
+        // ============================================================
+        function spawnWave() {
+            let d = diff();
+            let type = Math.random();
+            if (type < 0.45) {
+                // Small enemy ships - formasi random
+                let n = d.eCount;
+                let pat = Math.floor(Math.random() * 3);
+                let imgI = Math.floor(Math.random() * Math.max(1, IMG.enemies.length));
+                for (let i = 0; i < n; i++) {
+                    let ex, ey;
+                    if (pat === 0) { ex = Math.random() * (W - 80) + 40; ey = -40 - Math.random() * 120; }
+                    else if (pat === 1) { ex = W / 2 + (i - n / 2) * 60; ey = -40 - Math.abs(i - n / 2) * 40; }
+                    else { ex = (W / (n + 1)) * (i + 1); ey = -40 - Math.random() * 30; }
+                    ships.push({
+                        x: ex, y: ey, size: 30, hp: d.eHP,
+                        speed: d.eSpeed + Math.random() * 20,
+                        sTimer: Math.random() * 2, sInt: d.eShootInt,
+                        imgI: imgI, sinOff: Math.random() * Math.PI * 2, pat: pat
+                    });
+                }
+            } else if (type < 0.8) {
+                let n = d.rCount;
+                for (let i = 0; i < n; i++) {
+                    rocks.push({
+                        x: Math.random() * (W - 60) + 30, y: -30 - Math.random() * 80,
+                        size: 12 + Math.random() * 18, speed: d.rSpeed + Math.random() * 30,
+                        rot: Math.random() * Math.PI * 2, rs: (Math.random() - 0.5) * 4
+                    });
+                }
+            } else {
+                // Mixed
+                let imgI = Math.floor(Math.random() * Math.max(1, IMG.enemies.length));
+                for (let i = 0; i < Math.max(1, d.eCount - 1); i++) {
+                    ships.push({
+                        x: Math.random() * (W - 80) + 40, y: -40 - Math.random() * 80,
+                        size: 30, hp: d.eHP, speed: d.eSpeed + Math.random() * 20,
+                        sTimer: Math.random() * 2, sInt: d.eShootInt,
+                        imgI: imgI, sinOff: Math.random() * Math.PI * 2, pat: 0
+                    });
+                }
+                for (let i = 0; i < 2; i++) {
+                    rocks.push({
+                        x: Math.random() * (W - 60) + 30, y: -30 - Math.random() * 60,
+                        size: 12 + Math.random() * 15, speed: d.rSpeed + Math.random() * 20,
+                        rot: Math.random() * Math.PI * 2, rs: (Math.random() - 0.5) * 3
+                    });
+                }
+            }
+        }
+
+        function spawnBoss() {
+            let d = diff();
+            let b = {
+                x: W / 2, y: -100,
+                size: 55 + level * 2,
+                hp: d.bHP_easy, maxHp: d.bHP_easy,
+                speed: d.bSpeed,
+                phase: 'entering',
+                sTimer: 0, moveDir: 1,
+                isAngry: false,
+                imgI: level % Math.max(1, IMG.bosses.length),
+                bSpd: d.bBulletSpd_easy,
+                bN: d.bBulletN_easy,
+                sInt: d.bShootInt_easy,
+                pTimer: 0
+            };
+            bosses.push(b);
+            curBoss = b;
+        }
+
+        // ============================================================
+        // PARTICLES
+        // ============================================================
+        function boom(x, y, color, n) {
+            for (let i = 0; i < n; i++) {
+                particles.push({
+                    x, y,
+                    vx: (Math.random() - 0.5) * 250, vy: (Math.random() - 0.5) * 250,
+                    life: 1, size: Math.random() * 5 + 2, color
+                });
+            }
+        }
+
+        // ============================================================
+        // DRAWING
+        // ============================================================
+        function drawBG(dt) {
+            ctx.fillStyle = '#020208';
+            ctx.fillRect(0, 0, W, H);
+            if (dt) gridOff = (gridOff + 30 * dt) % 50;
+            ctx.strokeStyle = 'rgba(0,255,255,0.04)';
+            ctx.lineWidth = 1;
+            for (let x = (gridOff % 50); x < W; x += 50) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke(); }
+            for (let y = (gridOff % 50); y < H; y += 50) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); }
+            stars.forEach(s => {
+                if (dt) { s.y += s.sp * dt; if (s.y > H) { s.y = 0; s.x = Math.random() * W; } }
+                ctx.fillStyle = 'rgba(255,255,255,' + (s.s / 2.5) + ')';
+                ctx.fillRect(s.x, s.y, s.s, s.s);
+            });
+        }
+
+        function drawImg(img, x, y, w, h, rot) {
+            ctx.save(); ctx.translate(x, y);
+            if (rot) ctx.rotate(rot);
+            ctx.drawImage(img, -w / 2, -h / 2, w, h);
+            ctx.restore();
+        }
+
+        function drawPlayer() {
+            let p = player;
+            // Engine glow
+            ctx.fillStyle = 'rgba(34,211,238,' + (0.3 + Math.random() * 0.4) + ')';
+            ctx.beginPath(); ctx.arc(p.x, p.y + p.size * 0.6, 8 + Math.random() * 5, 0, Math.PI * 2); ctx.fill();
+            if (IMG.players.length > 0 && IMG.players[p.imgI || 0].complete) {
+                drawImg(IMG.players[p.imgI || 0], p.x, p.y, p.size * 2.2, p.size * 2.2);
+            } else {
+                ctx.fillStyle = '#22d3ee';
+                ctx.beginPath();
+                ctx.moveTo(p.x, p.y - p.size);
+                ctx.lineTo(p.x - p.size, p.y + p.size);
+                ctx.lineTo(p.x + p.size, p.y + p.size);
+                ctx.closePath();
+                ctx.fill();
+            }
+        }
+
+        function drawEnemy(e) {
+            let img = IMG.enemies[e.imgI] || IMG.enemies[0];
+            drawImg(img, e.x, e.y, e.size * 2, e.size * 2, Math.PI);
+            // HP bar kecil
+            if (e.hp > 1) {
+                let bw = e.size * 1.2;
+                ctx.fillStyle = '#333'; ctx.fillRect(e.x - bw / 2, e.y + e.size + 2, bw, 3);
+                ctx.fillStyle = '#ef4444'; ctx.fillRect(e.x - bw / 2, e.y + e.size + 2, bw * (e.hp / (1 + Math.floor(level / 8))), 3);
+            }
+        }
+
+        function drawRock(r) {
+            ctx.fillStyle = '#475569';
+            ctx.beginPath();
+            for (let i = 0; i < 7; i++) {
+                let a = (Math.PI * 2 / 7) * i + r.rot;
+                let rad = r.size * (0.8 + 0.2 * Math.sin(i * 2.5));
+                let rx = r.x + Math.cos(a) * rad, ry = r.y + Math.sin(a) * rad;
+                i === 0 ? ctx.moveTo(rx, ry) : ctx.lineTo(rx, ry);
+            }
+            ctx.closePath(); ctx.fill();
+            ctx.strokeStyle = '#64748b'; ctx.lineWidth = 2; ctx.stroke();
+        }
+
+        function drawBossShip(b) {
+            let img = IMG.bosses[b.imgI] || IMG.bosses[0];
+            let pulse = Math.sin(performance.now() / 200) * 4;
+            let sz = b.size * 2.5 + pulse;
+            if (b.isAngry) {
+                ctx.fillStyle = 'rgba(239,68,68,' + (0.1 + Math.sin(performance.now() / 150) * 0.1) + ')';
+                ctx.beginPath(); ctx.arc(b.x, b.y, sz * 0.6, 0, Math.PI * 2); ctx.fill();
+            }
+            drawImg(img, b.x, b.y, sz, sz);
+            // HP bar
+            let pct = Math.max(0, b.hp / b.maxHp);
+            let bw = b.size * 2.5;
+            ctx.fillStyle = '#1e293b'; ctx.fillRect(b.x - bw / 2, b.y - b.size - 25, bw, 10);
+            ctx.fillStyle = pct > 0.5 ? '#22c55e' : pct > 0.25 ? '#eab308' : '#ef4444';
+            ctx.fillRect(b.x - bw / 2, b.y - b.size - 25, bw * pct, 10);
+            ctx.strokeStyle = '#fff3'; ctx.lineWidth = 1; ctx.strokeRect(b.x - bw / 2, b.y - b.size - 25, bw, 10);
+            ctx.fillStyle = '#fbbf24'; ctx.font = 'bold 11px Orbitron, sans-serif'; ctx.textAlign = 'center';
+            ctx.fillText('BOSS LV.' + (level + 1), b.x, b.y - b.size - 30);
+        }
+
+        // ============================================================
+        // START GAME
+        // ============================================================
+        function startGame() {
+            Tone.start().then(() => { initAudio(); Tone.Transport.start(); });
+            hideAll();
+            score = 0; hp = 100; maxHP = 100;
+            correctAnswers = 0; wrongAnswers = 0;
+            wrongQuestions = []; playerHints = 0; correctStreak = 0;
+            level = 0; dist = 0; lastWD = 0;
+            bossActive = false; curBoss = null; quizOK = false;
+            player = { x: W / 2, y: H - 100, size: 28, speed: 450, sTimer: 0, sInt: 0.16, inv: 0, shield: 0, imgI: Math.floor(Math.random() * IMG.players.length) };
+            bullets = []; eBullets = []; bBullets = [];
+            ships = []; rocks = []; bosses = [];
+            particles = []; hpItems = []; shieldItems = []; hintItems = [];
+            gState = 'playing'; lastT = performance.now();
+            updateHUD();
+            requestAnimationFrame(gameLoop);
+        }
+
+        // ============================================================
+        // GAME LOOP
+        // ============================================================
+        function gameLoop(ts) {
+            if (gState !== 'playing') return;
+            let dt = Math.min((ts - lastT) / 1000, 0.05);
+            lastT = ts;
+            let d = diff();
+
+            // Distance
+            dist += 100 * dt;
+
+            // Player movement
+            let dx = 0, dy = 0;
+            if (keys['a'] || keys['arrowleft']) dx = -1;
+            if (keys['d'] || keys['arrowright']) dx = 1;
+            if (keys['w'] || keys['arrowup']) dy = -1;
+            if (keys['s'] || keys['arrowdown']) dy = 1;
+
+            player.x += dx * player.speed * dt;
+            player.y += dy * player.speed * dt;
+
+            // Pergerakan sentuhan jari yang lebih responsif (1:1 tracking)
+            if (tStart && tCur) {
+                let tdx = tCur.x - tStart.x;
+                let tdy = tCur.y - tStart.y;
+
+                player.x += tdx * 1.5;
+                player.y += tdy * 1.5;
+
+                // Update tStart ke posisi tCur untuk perhitungan relatif di frame selanjutnya
+                tStart.x = tCur.x;
+                tStart.y = tCur.y;
+            }
+
+            player.x = Math.max(player.size, Math.min(W - player.size, player.x));
+            player.y = Math.max(player.size, Math.min(H - player.size, player.y));
+            if (player.inv > 0) player.inv -= dt;
+
+            // Auto-shoot (dual / triple cannon)
+            player.sTimer -= dt;
+            if (player.sTimer <= 0) {
+                if (correctStreak >= 3) {
+                    bullets.push({ x: player.x, y: player.y - player.size, vy: -550, vx: 0 });
+                    bullets.push({ x: player.x - 12, y: player.y - player.size + 5, vy: -530, vx: -50 });
+                    bullets.push({ x: player.x + 12, y: player.y - player.size + 5, vy: -530, vx: 50 });
+                } else {
+                    bullets.push({ x: player.x - 8, y: player.y - player.size, vy: -550, vx: 0 });
+                    bullets.push({ x: player.x + 8, y: player.y - player.size, vy: -550, vx: 0 });
+                }
+                snd('laser');
+                player.sTimer = player.sInt;
+            }
+
+            // Spawn waves (no boss active)
+            if (!bossActive && dist - lastWD > d.waveInt) {
+                spawnWave();
+                lastWD = dist;
+                if (Math.random() < 0.18) hpItems.push({ x: Math.random() * (W - 40) + 20, y: -20, speed: 70 });
+                // Spawn perisai mulai level 5 (index 4)
+                if (level >= 4 && Math.random() < 0.25) shieldItems.push({ x: Math.random() * (W - 40) + 20, y: -20, speed: 75 });
+                if (Math.random() < 0.15) hintItems.push({ x: Math.random() * (W - 40) + 20, y: -20, speed: 65 });
+            }
+
+            // Boss spawn trigger
+            if (level < MATERI_DATA.length && !bossActive && dist >= d.distPerLv) {
+                bossActive = true;
+                ships = []; rocks = [];
+                let warn = document.getElementById('boss-warning');
+                warn.style.display = 'block';
+                setTimeout(() => { warn.style.display = 'none'; spawnBoss(); }, 1500);
+            }
+
+            // Win condition
+            if (level >= MATERI_DATA.length && bosses.length === 0 && !bossActive) {
+                endGame(true); return;
+            }
+
+            // Update bullets
+            bullets = bullets.filter(b => { b.x += (b.vx || 0) * dt; b.y += b.vy * dt; return b.y > -20 && b.x > -20 && b.x < W + 20; });
+            eBullets = eBullets.filter(b => { b.x += b.vx * dt; b.y += b.vy * dt; return b.y < H + 20 && b.y > -20 && b.x > -20 && b.x < W + 20; });
+            bBullets = bBullets.filter(b => { b.x += b.vx * dt; b.y += b.vy * dt; return b.y < H + 20 && b.y > -20 && b.x > -20 && b.x < W + 20; });
+
+            // Update enemy ships
+            ships.forEach(e => {
+                e.y += e.speed * dt;
+                if (e.pat === 1) e.x += Math.sin(e.y * 0.02 + e.sinOff) * 2;
+                e.sTimer -= dt;
+                if (e.sTimer <= 0 && e.y > 0) {
+                    let ang = Math.atan2(player.y - e.y, player.x - e.x);
+                    eBullets.push({ x: e.x, y: e.y + e.size, vx: Math.cos(ang) * 150, vy: Math.sin(ang) * 150 });
+                    e.sTimer = e.sInt + Math.random() * 0.5;
+                }
+            });
+            ships = ships.filter(e => e.y < H + 60 && e.hp > 0);
+
+            // Update rocks
+            rocks.forEach(r => { r.y += r.speed * dt; r.rot += r.rs * dt; });
+            rocks = rocks.filter(r => r.y < H + 60);
+
+            // Update bosses
+            bosses.forEach(b => {
+                if (b.phase === 'entering') {
+                    b.y += 50 * dt;
+                    if (b.y >= 120) { b.y = 120; b.phase = 'materi'; showMateriModal(b); }
+                } else if (b.phase === 'fighting') {
+                    b.pTimer += dt;
+                    // Movement patterns (semakin brutal di level tinggi)
+                    if (level < 8) {
+                        b.x += b.moveDir * b.speed * dt;
+                        if (b.x > W - b.size) b.moveDir = -1;
+                        if (b.x < b.size) b.moveDir = 1;
+                    } else if (level < 18) {
+                        b.x += b.moveDir * b.speed * dt;
+                        b.y = 120 + Math.sin(b.pTimer * 1.5) * 40;
+                        if (b.x > W - b.size) b.moveDir = -1;
+                        if (b.x < b.size) b.moveDir = 1;
+                    } else {
+                        b.x += b.moveDir * b.speed * 1.3 * dt;
+                        if (b.x > W - b.size) b.moveDir = -1;
+                        if (b.x < b.size) b.moveDir = 1;
+                        if (Math.sin(b.pTimer * 0.8) > 0.7) b.y = 120 + Math.sin(b.pTimer * 2) * 60;
+                        else b.y += (120 - b.y) * 2 * dt;
+                    }
+                    // Boss shooting
+                    b.sTimer -= dt;
+                    if (b.sTimer <= 0) {
+                        let ang = Math.atan2(player.y - b.y, player.x - b.x);
+                        for (let i = 0; i < b.bN; i++) {
+                            let spread = (i - (b.bN - 1) / 2) * 0.15;
+                            bBullets.push({ x: b.x, y: b.y + b.size * 0.5, vx: Math.cos(ang + spread) * b.bSpd, vy: Math.sin(ang + spread) * b.bSpd });
+                        }
+                        // Angry boss: ring burst
+                        if (b.isAngry && Math.random() < 0.3) {
+                            for (let i = 0; i < 8; i++) {
+                                let a = (Math.PI * 2 / 8) * i;
+                                bBullets.push({ x: b.x, y: b.y, vx: Math.cos(a) * b.bSpd * 0.7, vy: Math.sin(a) * b.bSpd * 0.7 });
+                            }
+                        }
+                        b.sTimer = b.sInt;
+                    }
+                }
+            });
+
+            // Update misc
+            hpItems.forEach(h => h.y += h.speed * dt);
+            hpItems = hpItems.filter(h => h.y < H + 30);
+            particles.forEach(p => { p.x += p.vx * dt; p.y += p.vy * dt; p.life -= dt * 2.5; });
+            particles = particles.filter(p => p.life > 0);
+
+            // ============ COLLISIONS ============
+            // Bullets vs enemies
+            for (let bi = bullets.length - 1; bi >= 0; bi--) {
+                let b = bullets[bi]; if (!b || b.y < -20) continue;
+                for (let ei = ships.length - 1; ei >= 0; ei--) {
+                    let e = ships[ei];
+                    if (Math.hypot(b.x - e.x, b.y - e.y) < e.size) {
+                        e.hp--; bullets.splice(bi, 1);
+                        if (e.hp <= 0) { boom(e.x, e.y, 'rgba(239,68,68,', 10); snd('explode'); score += 1; }
+                        break;
+                    }
+                }
+            }
+            ships = ships.filter(e => e.hp > 0);
+
+            // Bullets vs rocks
+            for (let bi = bullets.length - 1; bi >= 0; bi--) {
+                let b = bullets[bi]; if (!b || b.y < -20) continue;
+                for (let ri = rocks.length - 1; ri >= 0; ri--) {
+                    let r = rocks[ri];
+                    if (Math.hypot(b.x - r.x, b.y - r.y) < r.size + 4) {
+                        bullets.splice(bi, 1); boom(r.x, r.y, 'rgba(100,116,139,', 6); snd('explode'); rocks.splice(ri, 1); break;
+                    }
+                }
+            }
+
+            // Bullets vs boss
+            for (let bi = bullets.length - 1; bi >= 0; bi--) {
+                let b = bullets[bi]; if (!b || b.y < -20) continue;
+                for (let boi = bosses.length - 1; boi >= 0; boi--) {
+                    let boss = bosses[boi];
+                    if (boss.phase !== 'fighting') continue;
+                    if (Math.hypot(b.x - boss.x, b.y - boss.y) < boss.size) {
+                        boss.hp -= 5; bullets.splice(bi, 1);
+                        boom(b.x, b.y, 'rgba(234,179,8,', 3);
+                        if (boss.hp <= 0) {
+                            boom(boss.x, boss.y, 'rgba(234,179,8,', 25);
+                            boom(boss.x, boss.y, 'rgba(239,68,68,', 15);
+                            snd('success');
+                            
+                            // Tambah max HP dan HP saat mengalahkan boss
+                            maxHP += 20;
+                            hp = Math.min(hp + 20, maxHP);
+                            
+                            level++; bossActive = false; curBoss = null;
+                            dist = 0; lastWD = 0;
+                            hpItems.push({ x: boss.x, y: boss.y, speed: 50 });
+                            hpItems.push({ x: boss.x - 30, y: boss.y, speed: 55 });
+                            bosses.splice(boi, 1);
+                            updateHUD();
+                        }
+                        break;
+                    }
+                }
+            }
+
+            if (player.shield > 0) player.shield -= dt;
+
+            let prevHp = hp;
+
+            // Enemy/Boss bullets vs player
+            if (player.inv <= 0 && player.shield <= 0) {
+                for (let bi = eBullets.length - 1; bi >= 0; bi--) {
+                    if (Math.hypot(eBullets[bi].x - player.x, eBullets[bi].y - player.y) < player.size) {
+                        hp -= 8; player.inv = 0.5; snd('hit'); boom(player.x, player.y, 'rgba(239,68,68,', 5);
+                        eBullets.splice(bi, 1); updateHUD();
+                    }
+                }
+                for (let bi = bBullets.length - 1; bi >= 0; bi--) {
+                    if (Math.hypot(bBullets[bi].x - player.x, bBullets[bi].y - player.y) < player.size) {
+                        hp -= 12; player.inv = 0.5; snd('hit'); boom(player.x, player.y, 'rgba(239,68,68,', 6);
+                        bBullets.splice(bi, 1); updateHUD();
+                    }
+                }
+                // Ships vs player
+                for (let ei = ships.length - 1; ei >= 0; ei--) {
+                    if (Math.hypot(ships[ei].x - player.x, ships[ei].y - player.y) < player.size + ships[ei].size * 0.7) {
+                        hp -= 15; player.inv = 0.8; snd('hit'); boom(ships[ei].x, ships[ei].y, 'rgba(239,68,68,', 8);
+                        ships.splice(ei, 1); updateHUD();
+                    }
+                }
+                // Rocks vs player
+                for (let ri = rocks.length - 1; ri >= 0; ri--) {
+                    if (Math.hypot(rocks[ri].x - player.x, rocks[ri].y - player.y) < player.size + rocks[ri].size) {
+                        hp -= 18; player.inv = 0.8; snd('hit'); boom(rocks[ri].x, rocks[ri].y, 'rgba(100,116,139,', 6);
+                        rocks.splice(ri, 1); updateHUD();
+                    }
+                }
+            }
+
+            if (hp < prevHp) correctStreak = 0;
+
+            // Health items
+            for (let hi = hpItems.length - 1; hi >= 0; hi--) {
+                if (Math.hypot(hpItems[hi].x - player.x, hpItems[hi].y - player.y) < player.size + 15) {
+                    hp = Math.min(maxHP, hp + 25); snd('success'); boom(hpItems[hi].x, hpItems[hi].y, 'rgba(34,197,94,', 8);
+                    hpItems.splice(hi, 1); updateHUD();
+                }
+            }
+
+            // Shield items
+            for (let si = shieldItems.length - 1; si >= 0; si--) {
+                shieldItems[si].y += shieldItems[si].speed * dt;
+                if (Math.hypot(shieldItems[si].x - player.x, shieldItems[si].y - player.y) < player.size + 15) {
+                    player.shield = 12; // 12 detik kebal
+                    snd('success'); boom(shieldItems[si].x, shieldItems[si].y, 'rgba(56,189,248,', 8);
+                    shieldItems.splice(si, 1);
+                } else if (shieldItems[si].y > H + 30) {
+                    shieldItems.splice(si, 1);
+                }
+            }
+
+            // Hint items
+            for (let hi = hintItems.length - 1; hi >= 0; hi--) {
+                hintItems[hi].y += hintItems[hi].speed * dt;
+                if (Math.hypot(hintItems[hi].x - player.x, hintItems[hi].y - player.y) < player.size + 15) {
+                    playerHints++;
+                    snd('success'); boom(hintItems[hi].x, hintItems[hi].y, 'rgba(202,138,4,', 8);
+                    hintItems.splice(hi, 1);
+                } else if (hintItems[hi].y > H + 30) {
+                    hintItems.splice(hi, 1);
+                }
+            }
+
+            // Death
+            if (hp <= 0) { endGame(false); return; }
+
+            // ============ DRAW ============
+            drawBG(dt);
+
+            // Health items
+            hpItems.forEach(h => {
+                ctx.fillStyle = '#22c55e'; ctx.font = 'bold 22px sans-serif'; ctx.textAlign = 'center';
+                ctx.fillText('+', h.x, h.y + 7);
+            });
+            // Shield items
+            shieldItems.forEach(s => {
+                ctx.fillStyle = '#38bdf8'; ctx.font = '22px sans-serif'; ctx.textAlign = 'center';
+                ctx.fillText('🛡️', s.x, s.y + 7);
+            });
+            // Hint items
+            hintItems.forEach(h => {
+                ctx.fillStyle = '#ca8a04'; ctx.font = '22px sans-serif'; ctx.textAlign = 'center';
+                ctx.fillText('🔍', h.x, h.y + 7);
+            });
+
+            rocks.forEach(drawRock);
+            ships.forEach(drawEnemy);
+            bosses.forEach(drawBossShip);
+
+            // Player bullets
+            bullets.forEach(b => {
+                ctx.fillStyle = '#22d3ee'; ctx.shadowColor = '#22d3ee'; ctx.shadowBlur = 8;
+                ctx.fillRect(b.x - 2, b.y - 8, 4, 16); ctx.shadowBlur = 0;
+            });
+            // Enemy bullets
+            eBullets.forEach(b => {
+                ctx.fillStyle = '#ef4444'; ctx.shadowColor = '#ef4444'; ctx.shadowBlur = 6;
+                ctx.beginPath(); ctx.arc(b.x, b.y, 4, 0, Math.PI * 2); ctx.fill(); ctx.shadowBlur = 0;
+            });
+            // Boss bullets
+            bBullets.forEach(b => {
+                ctx.fillStyle = '#f59e0b'; ctx.shadowColor = '#f59e0b'; ctx.shadowBlur = 8;
+                ctx.beginPath(); ctx.arc(b.x, b.y, 5, 0, Math.PI * 2); ctx.fill(); ctx.shadowBlur = 0;
+            });
+            // Particles
+            particles.forEach(p => {
+                ctx.fillStyle = p.color + Math.max(0, p.life).toFixed(2) + ')';
+                ctx.fillRect(p.x - p.size / 2, p.y - p.size / 2, p.size, p.size);
+            });
+            // Player (blink saat invincible)
+            if (player.inv <= 0 || Math.floor(player.inv * 10) % 2 === 0) {
+                drawPlayer();
+                if (player.shield > 0) {
+                    ctx.strokeStyle = 'rgba(56,189,248,' + (0.4 + 0.3 * Math.sin(performance.now() / 100)) + ')';
+                    ctx.lineWidth = 4;
+                    ctx.beginPath();
+                    ctx.arc(player.x, player.y, player.size + 12, 0, Math.PI * 2);
+                    ctx.stroke();
+                    ctx.fillStyle = 'rgba(56,189,248,0.1)';
+                    ctx.fill();
+                }
+            }
+
+            updateHUD();
+            requestAnimationFrame(gameLoop);
+        }
+
+        // ============================================================
+        // MATERI MODAL & KUIS
+        // ============================================================
+        function showMateriModal(bossInstance) {
+            gState = 'paused';
+            if (audioReady) Tone.Transport.pause();
+
+            const data = MATERI_DATA[level];
+            document.getElementById('materi-title').innerText = data.title;
+            document.getElementById('materi-icon').innerText = '📋';
+            document.getElementById('materi-desc').innerText = data.text;
+            document.getElementById('materi-question').innerText = data.question;
+
+            if (playerHints > 0) {
+                document.getElementById('hint-container').classList.remove('hidden');
+                document.getElementById('hint-count').innerText = playerHints;
+            } else {
+                document.getElementById('hint-container').classList.add('hidden');
+            }
+
+            const optC = document.getElementById('quiz-options');
+            optC.innerHTML = '';
+            data.options.forEach((opt, idx) => {
+                const btn = document.createElement('button');
+                btn.className = "bg-slate-800 hover:bg-slate-700 text-left p-3 rounded border border-slate-600 transition text-white hover:border-cyan-400";
+                btn.innerText = opt;
+                btn.onclick = () => checkAnswer(idx);
+                optC.appendChild(btn);
+            });
+            optC.style.pointerEvents = 'auto';
+            document.getElementById('quiz-feedback').classList.add('hidden');
+            document.getElementById('btn-resume').classList.add('hidden');
+            scr.materi.classList.remove('hidden');
+        }
+
+        function useHint() {
+            if (playerHints <= 0) return;
+            playerHints--;
+            document.getElementById('hint-count').innerText = playerHints;
+            if (playerHints === 0) document.getElementById('hint-container').classList.add('hidden');
+            
+            const data = MATERI_DATA[level];
+            const optC = document.getElementById('quiz-options');
+            const btns = optC.getElementsByTagName('button');
+            
+            let wrongIndices = [];
+            for(let i=0; i<data.options.length; i++) {
+                if(i !== data.correct) wrongIndices.push(i);
+            }
+            // Shuffle wrong indices
+            wrongIndices.sort(() => Math.random() - 0.5);
+            // Hide 2 wrong options
+            if(wrongIndices.length >= 2) {
+                btns[wrongIndices[0]].style.opacity = '0.3';
+                btns[wrongIndices[0]].style.pointerEvents = 'none';
+                btns[wrongIndices[1]].style.opacity = '0.3';
+                btns[wrongIndices[1]].style.pointerEvents = 'none';
+            }
+            snd('success');
+        }
+
+        function checkAnswer(idx) {
+            const data = MATERI_DATA[level];
+            const fb = document.getElementById('quiz-feedback');
+            const rb = document.getElementById('btn-resume');
+            const optC = document.getElementById('quiz-options');
+            const btns = optC.getElementsByTagName('button');
+            
+            optC.style.pointerEvents = 'none';
+
+            if (idx === data.correct) {
+                correctAnswers++;
+                correctStreak++;
+                btns[idx].classList.remove('bg-slate-800', 'border-slate-600');
+                btns[idx].classList.add('bg-green-600', 'border-green-400');
+                
+                fb.innerHTML = "✅ TEPAT! Sistem Pertahanan Boss berhasil dilemahkan. Hancurkan dengan mudah!";
+                fb.className = "text-center mt-4 p-3 rounded font-bold bg-green-900/50 text-green-400 border border-green-500 pop-in block";
+                quizOK = true;
+                score += 4; // 25 x 4 = 100 poin max
+                updateHUD();
+            } else {
+                wrongAnswers++;
+                correctStreak = 0;
+                wrongQuestions.push(level);
+                btns[idx].classList.remove('bg-slate-800', 'border-slate-600');
+                btns[idx].classList.add('bg-red-600', 'border-red-400');
+                btns[data.correct].classList.remove('bg-slate-800', 'border-slate-600');
+                btns[data.correct].classList.add('bg-green-600', 'border-green-400');
+                
+                fb.innerHTML = `❌ ANALISIS SALAH! Boss Mengamuk, HP menebal drastis, tembakan brutal!<br/><span class="text-white text-sm font-normal mt-2 block">Jawaban yang benar: <b>${data.options[data.correct]}</b></span>`;
+                fb.className = "text-center mt-4 p-3 rounded font-bold bg-red-900/50 text-red-400 border border-red-500 pop-in block";
+                quizOK = false;
+            }
+            rb.classList.remove('hidden');
+        }
+
+        function resumeGame() {
+            hideAll();
+            let d = diff();
+            if (curBoss) {
+                curBoss.phase = 'fighting';
+                if (quizOK) {
+                    curBoss.hp = d.bHP_easy; curBoss.maxHp = d.bHP_easy;
+                    curBoss.isAngry = false;
+                    curBoss.sInt = d.bShootInt_easy;
+                    curBoss.bN = d.bBulletN_easy;
+                    curBoss.bSpd = d.bBulletSpd_easy;
+                } else {
+                    curBoss.hp = d.bHP_hard; curBoss.maxHp = d.bHP_hard;
+                    curBoss.isAngry = true;
+                    curBoss.sInt = d.bShootInt_hard;
+                    curBoss.bN = d.bBulletN_hard;
+                    curBoss.bSpd = d.bBulletSpd_hard;
+                }
+            }
+            gState = 'playing';
+            if (audioReady) Tone.Transport.start();
+            lastT = performance.now();
+            ships = []; rocks = []; bullets = []; eBullets = []; bBullets = [];
+            requestAnimationFrame(gameLoop);
+        }
+
+        function endGame(win) {
+            gState = win ? 'win' : 'gameover';
+            if (audioReady) Tone.Transport.stop();
+            hideAll();
+            
+            let rating = getRating(correctAnswers);
+            if (score > lsData.highScore) lsData.highScore = score;
+            lsData.unlockedLevels = Math.max(lsData.unlockedLevels, level + 1);
+            
+            // Simple logic for highest rating
+            let rOrder = ["Traditional 2D Drafter", "Junior BIM Modeler", "BIM Coordinator", "Expert BIM Manager"];
+            let idxCur = rOrder.indexOf(lsData.bestRating);
+            let idxNew = rOrder.indexOf(rating);
+            if (idxNew > idxCur) lsData.bestRating = rating;
+            
+            saveData();
+            
+            const tEl = document.getElementById('end-title');
+            const dEl = document.getElementById('end-desc');
+            document.getElementById('end-score').innerText = score;
+            document.getElementById('end-correct').innerText = correctAnswers;
+            document.getElementById('end-wrong').innerText = wrongAnswers;
+            document.getElementById('end-rating').innerText = rating;
+            
+            if (win) {
+                tEl.innerText = "PROYEK SELESAI! 🎉";
+                tEl.className = "font-cyber text-5xl md:text-6xl font-black mb-4 text-center text-green-400 drop-shadow-[0_0_15px_rgba(74,222,128,0.8)] pop-in";
+                dEl.innerText = "Luar biasa! Seluruh 25 data BIM telah terekstrak. Bangunan siap didirikan!";
+            } else {
+                tEl.innerText = "PROYEK GAGAL";
+                tEl.className = "font-cyber text-5xl md:text-6xl font-black mb-4 text-center text-red-500 drop-shadow-[0_0_15px_rgba(239,68,68,0.8)] pop-in";
+                dEl.innerText = "BIM Model hancur! Kamu sampai Level " + (level + 1) + " dari 25.";
+            }
+            
+            if (wrongQuestions.length > 0) document.getElementById('btn-review').classList.remove('hidden');
+            else document.getElementById('btn-review').classList.add('hidden');
+            
+            scr.end.classList.remove('hidden');
+        }
+
+        function resetGame() { startGame(); }
+
+        // Draw background on load
+        drawBG();
+        loadData();
+    </script>
+</body>
+
+</html>
