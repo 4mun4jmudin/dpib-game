@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>BIM Tower Builder</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0f172a;
+            color: #f8fafc;
+            overflow: hidden; /* Prevent scrolling */
+            touch-action: none; /* Prevent zooming/scrolling on mobile */
+        }
+        h1, .font-cyber { font-family: 'Orbitron', sans-serif; }
+        
+        #gameCanvas {
+            display: block;
+            width: 100vw;
+            height: 100vh;
+            background: linear-gradient(to bottom, #1e293b, #0f172a);
+        }
+
+        /* UI Overlays */
+        #ui-layer {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; /* Let clicks pass through to canvas unless interacting with UI */
+        }
+
+        .glass-panel {
+            background: rgba(30, 41, 59, 0.85);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+            border-radius: 1rem;
+            pointer-events: auto; /* Re-enable pointer events for panels */
+        }
+
+        #start-screen, #game-over-screen, #quiz-screen {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 90%; max-width: 450px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center; 
+            align-items: center;
+            z-index: 50;
+        }
+
+        .hidden-ui { display: none !important; }
+
+        .btn-neon {
+            background: linear-gradient(135deg, #0ea5e9, #8b5cf6);
+            box-shadow: 0 0 15px rgba(14, 165, 233, 0.5);
+            transition: all 0.2s;
+            cursor: pointer;
+            border: none;
+            color: white;
+            font-weight: bold;
+            padding: 12px 24px;
+            border-radius: 0.5rem;
+            font-family: 'Orbitron', sans-serif;
+            text-transform: uppercase;
+            width: 100%;
+            margin-top: 15px;
+        }
+        .btn-neon:hover { transform: scale(1.05); box-shadow: 0 0 25px rgba(139, 92, 246, 0.8); }
+
+        .answer-btn {
+            background: rgba(15, 23, 42, 0.8);
+            border: 2px solid #334155;
+            color: #cbd5e1;
+            padding: 12px 16px;
+            margin: 8px 0;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            width: 100%;
+            text-align: left;
+            transition: all 0.2s;
+            font-size: 14px;
+        }
+        .answer-btn:hover { background: #1e293b; border-color: #0ea5e9; color: #fff; }
+        .answer-btn.correct { background: #10b981; border-color: #059669; color: #fff; }
+        .answer-btn.wrong { background: #ef4444; border-color: #b91c1c; color: #fff; }
+
+        #score-display {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            font-size: 2.5rem;
+            font-weight: 900;
+            color: rgba(255, 255, 255, 0.2);
+            font-family: 'Orbitron', sans-serif;
+            z-index: 10;
+        }
+        
+        #nav-back {
+            position: absolute;
+            top: 20px; right: 20px;
+            z-index: 60;
+            pointer-events: auto;
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="gameCanvas"></canvas>
+
+    <div id="ui-layer">
+        
+        <div id="score-display">0</div>
+
+        <a href="index.html" id="nav-back" class="bg-slate-800/80 hover:bg-slate-700 text-white px-4 py-2 rounded-lg border border-slate-600 font-bold text-sm transition backdrop-blur">
+            <i class="fas fa-sign-out-alt"></i> Keluar
+        </a>
+
+        <!-- Start Screen -->
+        <div id="start-screen" class="glass-panel p-8 text-center flex flex-col items-center">
+            <div class="text-6xl mb-4 drop-shadow-[0_0_15px_rgba(255,255,255,0.5)]">🏢</div>
+            <h1 class="text-4xl font-black mb-3 text-transparent bg-clip-text bg-gradient-to-r from-sky-400 to-purple-400 font-cyber tracking-wider">BIM TOWER</h1>
+            <div class="bg-slate-900/50 p-4 rounded-xl border border-slate-700/50 mb-6 text-left w-full">
+                <p class="text-slate-300 text-sm mb-2 font-semibold border-b border-slate-700 pb-2">Aturan Main:</p>
+                <ul class="text-sm space-y-2 text-slate-400">
+                    <li><i class="fas fa-hand-pointer text-sky-400 w-5"></i> <strong>Tap layar</strong> untuk menjatuhkan blok.</li>
+                    <li><i class="fas fa-question-circle text-purple-400 w-5"></i> Tiap 2 blok muncul <strong>Kuis BIM</strong>.</li>
+                    <li><i class="fas fa-check-circle text-green-400 w-5"></i> Benar = Blok <strong>Membesar</strong> (Mudah).</li>
+                    <li><i class="fas fa-times-circle text-red-400 w-5"></i> Salah = Blok <strong>Mengecil</strong> (Sulit).</li>
+                </ul>
+            </div>
+            <button id="btn-start" class="btn-neon text-lg py-4">Mulai Membangun <i class="fas fa-play ml-2"></i></button>
+        </div>
+
+        <!-- Quiz Screen -->
+        <div id="quiz-screen" class="glass-panel p-6 hidden-ui border-sky-500/50 shadow-[0_0_30px_rgba(14,165,233,0.2)] w-full max-w-md flex flex-col items-center">
+            <div class="flex items-center justify-between w-full mb-6 border-b border-slate-700/80 pb-3">
+                <span class="text-xs font-bold bg-sky-500/20 text-sky-300 px-3 py-1.5 rounded-full border border-sky-500/30 tracking-wider">KUIS BIM (BAB 1.1)</span>
+                <i class="fas fa-brain text-sky-400 text-2xl animate-pulse"></i>
+            </div>
+            <p id="quiz-question" class="text-lg md:text-xl font-bold text-white mb-8 leading-snug w-full text-left">Pertanyaan akan muncul di sini?</p>
+            <div id="quiz-options" class="w-full flex flex-col gap-3">
+                <!-- Buttons injected via JS -->
+            </div>
+        </div>
+
+        <!-- Game Over Screen -->
+        <div id="game-over-screen" class="glass-panel p-8 hidden-ui border-red-500/50 shadow-[0_0_40px_rgba(239,68,68,0.3)] flex flex-col items-center">
+            <div class="w-20 h-20 bg-red-500/20 rounded-full flex items-center justify-center mb-4 border border-red-500/50">
+                <i class="fas fa-building-circle-xmark text-4xl text-red-400"></i>
+            </div>
+            <h2 class="text-3xl font-black mb-2 text-transparent bg-clip-text bg-gradient-to-r from-red-400 to-orange-400 font-cyber tracking-wide">BANGUNAN RUNTUH!</h2>
+            <div class="bg-slate-900/60 w-full py-4 rounded-xl border border-slate-700 mt-4 mb-6">
+                <p class="text-slate-400 text-sm font-semibold uppercase tracking-widest mb-1">Total Lantai</p>
+                <p class="text-5xl font-black text-white font-cyber drop-shadow-[0_0_10px_rgba(255,255,255,0.5)]" id="final-score">0</p>
+            </div>
+            <button id="btn-restart" class="btn-neon text-lg py-4 w-full" style="background: linear-gradient(135deg, #ef4444, #b91c1c); box-shadow: 0 0 20px rgba(239, 68, 68, 0.5);">
+                <i class="fas fa-rotate-right mr-2"></i> Coba Lagi
+            </button>
+        </div>
+
+    </div>
+
+<script>
+    // --- QUESTION DATABASE (Materi 1.1) ---
+    const bimQuestions = [
+        { q: "Apa kepanjangan dari BIM?", options: ["Building Information Modeling", "Building Internal Management", "Basic Information Model"], ans: 0 },
+        { q: "Konsep utama BIM yang memastikan semua elemen terhubung dalam satu database disebut:", options: ["Single Source of Truth", "Multi-disciplinary Drawing", "Parametric Database"], ans: 0 },
+        { q: "Kurva MacLeamy menunjukkan bahwa biaya perubahan desain paling murah dilakukan pada saat:", options: ["Tahap Perancangan (Awal)", "Tahap Konstruksi (Lapangan)", "Tahap Pemeliharaan"], ans: 0 },
+        { q: "BIM bukanlah sekadar menggambar 3D, melainkan filosofi kerja yang disebut:", options: ["Virtual Construction", "2D Drafting", "Manual Rendering"], ans: 0 },
+        { q: "Perubahan ukuran jendela akan otomatis mengubah daftar volume material. Ini adalah sifat:", options: ["Parametrik", "Statis", "Geometrik"], ans: 0 },
+        { q: "Tahapan 'Cradle to Grave' dalam BIM mencakup Plan, Design, Build, dan...", options: ["Operate (Operasi/Pemeliharaan)", "Demolish (Pembongkaran)", "Marketing (Pemasaran)"], ans: 0 },
+        { q: "BIM menggantikan sistem gambar CAD konvensional yang sering disebut sebagai:", options: ["Menggambar Garis (Line & Arc)", "Virtual Reality", "Object Oriented"], ans: 0 },
+        { q: "Tujuan 'Front-Loading' dalam metodologi BIM adalah...", options: ["Pencegahan bentrokan/masalah di awal", "Mempercepat cor beton", "Menghemat listrik proyek"], ans: 0 }
+    ];
+
+    // --- GAME ENGINE VARIABLES ---
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    
+    // Resize handling
+    let cw, ch;
+    function resize() {
+        cw = canvas.width = window.innerWidth;
+        ch = canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    // Game states
+    let state = 'START'; // START, PLAYING, QUIZ, GAMEOVER
+    let blocks = [];
+    let debris = [];
+    let score = 0;
+    
+    // Block Properties
+    let blockHeight = 40;
+    let baseWidth = 200;
+    if (cw < 500) baseWidth = cw * 0.6; // Scale down for mobile
+    let currentWidth = baseWidth;
+    let speed = 4;
+    let cameraY = 0;
+
+    // Colors
+    const colors = [
+        '#0ea5e9', '#3b82f6', '#8b5cf6', '#a855f7', '#d946ef', '#f43f5e'
+    ];
+
+    // Objects
+    class Block {
+        constructor(x, y, w, h, colorIndex, isMoving = false, dir = 1) {
+            this.x = x;
+            this.y = y;
+            this.w = w;
+            this.h = h;
+            this.color = colors[colorIndex % colors.length];
+            this.isMoving = isMoving;
+            this.dir = dir;
+            this.targetY = y;
+        }
+
+        update(dt) {
+            if (this.isMoving) {
+                this.x += speed * this.dir;
+                // Bounce off edges
+                if (this.x <= 0) {
+                    this.x = 0;
+                    this.dir = 1;
+                }
+                if (this.x + this.w >= cw) {
+                    this.x = cw - this.w;
+                    this.dir = -1;
+                }
+            }
+            // Smooth vertical movement for camera panning
+            this.y += (this.targetY - this.y) * 0.1;
+        }
+
+        draw(ctx) {
+            // Draw box
+            ctx.fillStyle = this.color;
+            ctx.fillRect(this.x, this.y, this.w, this.h);
+            
+            // Draw highlights for 3D/Neon feel
+            ctx.fillStyle = 'rgba(255,255,255,0.2)';
+            ctx.fillRect(this.x, this.y, this.w, 4); // Top edge
+            ctx.fillStyle = 'rgba(0,0,0,0.2)';
+            ctx.fillRect(this.x, this.y + this.h - 4, this.w, 4); // Bottom edge
+            
+            // Add grid/texture pattern
+            ctx.strokeStyle = 'rgba(0,0,0,0.1)';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            for(let i=10; i<this.w; i+=20) {
+                ctx.moveTo(this.x + i, this.y);
+                ctx.lineTo(this.x + i, this.y + this.h);
+            }
+            ctx.stroke();
+        }
+    }
+
+    class Debris {
+        constructor(x, y, w, h, color) {
+            this.x = x; this.y = y; this.w = w; this.h = h; this.color = color;
+            this.vy = 0; this.gravity = 0.5;
+            this.opacity = 1;
+        }
+        update() {
+            this.vy += this.gravity;
+            this.y += this.vy;
+            this.opacity -= 0.02;
+        }
+        draw(ctx) {
+            ctx.globalAlpha = Math.max(0, this.opacity);
+            ctx.fillStyle = this.color;
+            ctx.fillRect(this.x, this.y, this.w, this.h);
+            ctx.globalAlpha = 1;
+        }
+    }
+
+    // --- GAME LOGIC ---
+    function initGame() {
+        score = 0;
+        currentWidth = baseWidth;
+        speed = cw < 500 ? 3 : 5; // Responsive speed
+        blocks = [];
+        debris = [];
+        document.getElementById('score-display').innerText = '0';
+        
+        // Base block
+        const startY = ch - blockHeight - 50;
+        blocks.push(new Block((cw - currentWidth)/2, startY, currentWidth, blockHeight, 0, false));
+        
+        // First moving block
+        spawnBlock();
+        
+        state = 'PLAYING';
+        document.getElementById('start-screen').classList.add('hidden-ui');
+        document.getElementById('game-over-screen').classList.add('hidden-ui');
+        lastTime = performance.now();
+        requestAnimationFrame(gameLoop);
+    }
+
+    function spawnBlock() {
+        const topBlock = blocks[blocks.length - 1];
+        const newY = topBlock.targetY - blockHeight;
+        
+        // Move camera down by pushing all blocks' targetY up
+        if (newY < ch / 2) {
+            const shift = (ch / 2) - newY;
+            blocks.forEach(b => b.targetY += shift);
+        }
+        
+        const spawnY = blocks[blocks.length-1].targetY - blockHeight;
+        // Start from edge
+        let startX = Math.random() > 0.5 ? 0 : cw - currentWidth;
+        let dir = startX === 0 ? 1 : -1;
+        
+        blocks.push(new Block(startX, spawnY, currentWidth, blockHeight, score + 1, true, dir));
+    }
+
+    function dropBlock() {
+        if (state !== 'PLAYING') return;
+        
+        const topBlock = blocks[blocks.length - 1];
+        const prevBlock = blocks[blocks.length - 2];
+        
+        topBlock.isMoving = false;
+        
+        // Calculate overlap
+        let overlapStart = Math.max(topBlock.x, prevBlock.x);
+        let overlapEnd = Math.min(topBlock.x + topBlock.w, prevBlock.x + prevBlock.w);
+        let overlap = overlapEnd - overlapStart;
+        
+        if (overlap > 0) {
+            // Success hit
+            score++;
+            document.getElementById('score-display').innerText = score;
+            
+            // Slice the block
+            let cutW = topBlock.w - overlap;
+            if (cutW > 0) { // Sliced
+                // Create debris
+                let debrisX = (topBlock.x < prevBlock.x) ? topBlock.x : overlapEnd;
+                debris.push(new Debris(debrisX, topBlock.y, cutW, topBlock.h, topBlock.color));
+                
+                // Shrink current width and update top block
+                currentWidth = overlap;
+                topBlock.w = overlap;
+                topBlock.x = overlapStart;
+            } else {
+                // Perfect hit, maybe reward?
+                if (currentWidth < baseWidth) currentWidth += 5; // Slight recovery for perfect
+            }
+            
+            // Check Quiz trigger
+            if (score > 0 && score % 2 === 0) {
+                triggerQuiz();
+            } else {
+                // Increase speed slightly
+                speed += 0.2;
+                spawnBlock();
+            }
+            
+        } else {
+            // Missed! Game Over
+            debris.push(new Debris(topBlock.x, topBlock.y, topBlock.w, topBlock.h, topBlock.color));
+            blocks.pop(); // Remove it from stack so it falls
+            gameOver();
+        }
+    }
+
+    // --- QUIZ LOGIC ---
+    function triggerQuiz() {
+        state = 'QUIZ';
+        const qUI = document.getElementById('quiz-screen');
+        qUI.classList.remove('hidden-ui');
+        
+        // Pick random question
+        const qData = bimQuestions[Math.floor(Math.random() * bimQuestions.length)];
+        document.getElementById('quiz-question').innerText = qData.q;
+        
+        // Shuffle options but remember correct answer
+        let ops = qData.options.map((opt, i) => ({text: opt, isCorrect: i === qData.ans}));
+        ops.sort(() => Math.random() - 0.5);
+        
+        const optsContainer = document.getElementById('quiz-options');
+        optsContainer.innerHTML = '';
+        
+        ops.forEach(op => {
+            const btn = document.createElement('button');
+            btn.className = 'answer-btn font-cyber';
+            btn.innerText = op.text;
+            btn.onclick = () => handleAnswer(btn, op.isCorrect);
+            optsContainer.appendChild(btn);
+        });
+    }
+
+    function handleAnswer(btn, isCorrect) {
+        // Disable all buttons
+        const allBtns = document.querySelectorAll('.answer-btn');
+        allBtns.forEach(b => b.style.pointerEvents = 'none');
+        
+        if (isCorrect) {
+            btn.classList.add('correct');
+            // Reward: Expand block by 30px (up to max baseWidth)
+            currentWidth = Math.min(baseWidth, currentWidth + 30);
+            
+            // Adjust the top block visually to show reward
+            const tb = blocks[blocks.length-1];
+            tb.w = currentWidth;
+            // Center it over previous
+            const pb = blocks[blocks.length-2];
+            tb.x = pb.x + (pb.w / 2) - (currentWidth / 2);
+            
+            setTimeout(() => {
+                resumeAfterQuiz();
+            }, 1000);
+            
+        } else {
+            btn.classList.add('wrong');
+            // Show correct one
+            allBtns.forEach(b => {
+                // Find correct and highlight
+                // (We don't store it in DOM simply, but visual feedback is enough)
+            });
+            // Penalty: Shrink block by 20px
+            currentWidth = Math.max(20, currentWidth - 20);
+            const tb = blocks[blocks.length-1];
+            tb.w = currentWidth;
+            // Align to left of previous
+            const pb = blocks[blocks.length-2];
+            tb.x = pb.x + (pb.w / 2) - (currentWidth / 2);
+            
+            // Increase speed penalty
+            speed += 0.5;
+
+            setTimeout(() => {
+                resumeAfterQuiz();
+            }, 1500);
+        }
+    }
+
+    function resumeAfterQuiz() {
+        document.getElementById('quiz-screen').classList.add('hidden-ui');
+        state = 'PLAYING';
+        spawnBlock();
+    }
+
+    function gameOver() {
+        state = 'GAMEOVER';
+        document.getElementById('final-score').innerText = score;
+        setTimeout(() => {
+            document.getElementById('game-over-screen').classList.remove('hidden-ui');
+        }, 1000);
+    }
+
+    // --- RENDER LOOP ---
+    let lastTime = 0;
+    function gameLoop(timestamp) {
+        let dt = timestamp - lastTime;
+        lastTime = timestamp;
+
+        // Draw background
+        ctx.clearRect(0, 0, cw, ch);
+
+        // Update & Draw blocks
+        blocks.forEach(b => {
+            if (state === 'PLAYING') b.update(dt);
+            b.draw(ctx);
+        });
+
+        // Update & Draw debris
+        for (let i = debris.length - 1; i >= 0; i--) {
+            let d = debris[i];
+            d.update();
+            d.draw(ctx);
+            if (d.opacity <= 0 || d.y > ch) {
+                debris.splice(i, 1);
+            }
+        }
+
+        if (state !== 'START') {
+            requestAnimationFrame(gameLoop);
+        }
+    }
+
+    // --- EVENT LISTENERS ---
+    document.getElementById('btn-start').addEventListener('click', initGame);
+    document.getElementById('btn-restart').addEventListener('click', initGame);
+    
+    // Tap / Click to drop
+    window.addEventListener('pointerdown', (e) => {
+        // Prevent dropping if clicking on UI buttons
+        if (e.target.tagName === 'BUTTON' || e.target.tagName === 'A' || e.target.closest('.glass-panel')) return;
+        dropBlock();
+    });
+    // Keyboard Space to drop
+    window.addEventListener('keydown', (e) => {
+        if (e.code === 'Space') dropBlock();
+    });
+
+    // Initial render
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(0,0,cw,ch);
+</script>
+</body>
+</html>
