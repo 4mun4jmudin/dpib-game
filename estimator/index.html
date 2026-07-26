@@ -1691,9 +1691,10 @@
                 clearScene();
                 GAME_STATE.projectId = 'proj_' + Date.now();
                 GAME_STATE.projectName = name;
-                GAME_STATE.budget = 5000000;
+                GAME_STATE.budget = 150000;
                 GAME_STATE.spent = 0;
                 GAME_STATE.day = 1;
+                GAME_STATE.maxDays = 30;
                 GAME_STATE.elementsBuilt = 0;
                 updateHUD();
                 updateProgress();
@@ -1702,6 +1703,84 @@
                 document.getElementById('start-screen').style.display = 'none';
                 logMessage(`🚀 Proyek baru "${name}" dimulai.`, 'success');
             }
+        });
+
+        function loadTutorialModel() {
+            clearScene();
+            GAME_STATE.projectId = 'tut_' + Date.now();
+            GAME_STATE.projectName = "Tutorial: Konstruksi Dasar";
+            GAME_STATE.budget = 150000;
+            GAME_STATE.spent = 0;
+            GAME_STATE.day = 1;
+            GAME_STATE.maxDays = 30;
+            GAME_STATE.elementsBuilt = 0;
+
+            const makeItem = (type, px, py, pz, ry = 0) => {
+                const data = BIM_LIBRARY[type];
+                if(!data) return;
+                
+                let material;
+                if (data.transparent) {
+                    material = new THREE.MeshLambertMaterial({ color: data.color, transparent: true, opacity: data.opacity });
+                } else if (data.type === 'mep') {
+                    material = new THREE.MeshPhongMaterial({ color: data.color, shininess: 100 });
+                } else {
+                    material = new THREE.MeshStandardMaterial({ color: data.color, roughness: 0.7 });
+                }
+                const mesh = createMeshForTool(type, material);
+                mesh.position.set(px, py, pz);
+                mesh.rotation.y = ry;
+                mesh.castShadow = true; 
+                mesh.receiveShadow = true;
+                scene.add(mesh);
+                
+                const bimObj = {
+                    mesh: mesh,
+                    bimData: {
+                        id: generateBimId(data.category),
+                        libKey: type,
+                        name: data.name,
+                        category: data.category,
+                        cost: data.cost,
+                        time: data.time,
+                        type: data.type,
+                        volume: (data.size[0] * data.size[1] * data.size[2]).toFixed(2) + ' m³'
+                    }
+                };
+                
+                GAME_STATE.placedObjects.push(bimObj);
+                GAME_STATE.spent += data.cost;
+                GAME_STATE.day += data.time;
+                GAME_STATE.elementsBuilt++;
+            };
+
+            // Bangun 4 Pondasi (Tapak)
+            makeItem('foundation', -2.5, 0.5, -2.5);
+            makeItem('foundation', 2.5, 0.5, -2.5);
+            makeItem('foundation', -2.5, 0.5, 2.5);
+            makeItem('foundation', 2.5, 0.5, 2.5);
+            
+            // Bangun 4 Tiang Kolom di atas pondasi (Kolom tingginya 4, dari y=1 fondasi, jadi y=3)
+            makeItem('column', -2.5, 3, -2.5);
+            makeItem('column', 2.5, 3, -2.5);
+            makeItem('column', -2.5, 3, 2.5);
+            makeItem('column', 2.5, 3, 2.5);
+
+            // Bangun dinding arsitektur di sela-sela kolom
+            makeItem('wall-brick', 0, 3, -2.5); // Dinding belakang bata
+            makeItem('wall-glass', -2.5, 3, 0, Math.PI/2); // Dinding kiri kaca
+            makeItem('wall-brick', 2.5, 3, 0, Math.PI/2); // Dinding kanan bata
+            
+            updateHUD();
+            updateProgress();
+            saveState();
+            
+            document.getElementById('start-screen').style.display = 'none';
+            logMessage(`🎓 Mode Tutorial Dimulai. Coba periksa data Kolom di Inspektur BIM dan tes pasang Pipa!`, 'success');
+        }
+
+        document.getElementById('btn-load-tutorial').addEventListener('click', () => {
+            loadTutorialModel();
         });
 
         // Simpan & Keluar ke Dasbor
