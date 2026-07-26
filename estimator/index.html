@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>BIM Builder Pro: Project Simulator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <!-- Three.js and OrbitControls -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1e40af;
+            --success: #16a34a;
+            --danger: #dc2626;
+            --warning: #f59e0b;
+            --bg-dark: #1f2937;
+            --bg-panel: #374151;
+            --text-light: #f3f4f6;
+        }
+
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: var(--bg-dark);
+            color: var(--text-light);
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            touch-action: none;
+        }
+
+        #game-container {
+            display: flex;
+            height: 100vh;
+            width: 100vw;
+            position: relative;
+        }
+
+        /* 3D Canvas Area */
+        #canvas-container {
+            flex-grow: 1;
+            position: relative;
+            background: radial-gradient(circle at center, #2d3748 0%, #1a202c 100%);
+            outline: none;
+        }
+
+        /* UI Panels Overlay */
+        .panel {
+            position: absolute;
+            background: rgba(31, 41, 55, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 16px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            z-index: 10;
+        }
+
+        /* Top HUD */
+        #hud-top {
+            top: 16px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 24px;
+            min-width: 300px;
+            justify-content: space-around;
+        }
+
+        .hud-stat {
+            text-align: center;
+        }
+        .hud-stat-value {
+            font-size: 1.25rem;
+            font-weight: bold;
+            font-family: monospace;
+        }
+        .stat-budget { color: var(--success); }
+        .stat-time { color: var(--warning); }
+
+        /* Left Panel - Tools */
+        #panel-tools {
+            top: 80px;
+            left: 16px;
+            bottom: 16px;
+            width: 340px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        #tools-scroll {
+            overflow-y: auto;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            padding-right: 8px;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.4); }
+
+        /* Right Panel - Info */
+        #panel-info {
+            top: 80px;
+            right: 16px;
+            width: 300px;
+            bottom: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        /* Tool Cards */
+        .tool-card {
+            background: rgba(17, 24, 39, 0.8);
+            border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 8px;
+            padding: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .tool-card:hover, .tool-card.active {
+            background: rgba(37, 99, 235, 0.2);
+            border-color: var(--primary);
+        }
+        .tool-icon {
+            width: 40px;
+            height: 40px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            flex-shrink: 0;
+        }
+
+        /* Buttons */
+        .btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+        }
+        .btn:active { transform: scale(0.98); }
+        .btn:hover { background: var(--primary-dark); }
+        .btn-danger { background: var(--danger); }
+        .btn-danger:hover { background: #b91c1c; }
+        .btn-secondary { background: #4b5563; }
+        .btn-secondary:hover { background: #374151; }
+
+        /* Logs */
+        #log-container {
+            flex-grow: 1;
+            background: #111827;
+            border-radius: 6px;
+            padding: 10px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 0.85rem;
+        }
+        .log-entry { margin-bottom: 4px; padding-bottom: 4px; border-bottom: 1px solid #374151; }
+        .log-error { color: #ef4444; }
+        .log-success { color: #10b981; }
+
+        /* Start Screen */
+        #start-screen {
+            position: absolute;
+            inset: 0;
+            background: rgba(17, 24, 39, 0.95);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            text-align: center;
+            padding: 20px;
+            backdrop-filter: blur(5px);
+        }
+
+        /* Progress Bar */
+        .progress-bar-bg {
+            background: #374151;
+            height: 8px;
+            border-radius: 4px;
+            width: 100%;
+            overflow: hidden;
+            margin-top: 4px;
+        }
+        .progress-bar-fill {
+            height: 100%;
+            background: var(--primary);
+            width: 0%;
+            transition: width 0.3s;
+        }
+
+        /* Mobile Adjustments */
+        @media (max-width: 768px) {
+            #panel-tools {
+                width: 45%;
+                top: auto;
+                bottom: 10px;
+                height: 45vh;
+                left: 10px;
+            }
+            #panel-info {
+                width: 45%;
+                top: auto;
+                bottom: 10px;
+                height: 45vh;
+                right: 10px;
+            }
+            #hud-top {
+                width: 95%;
+                min-width: auto;
+                top: 10px;
+                gap: 10px;
+            }
+            .panel { padding: 10px; }
+            .hud-stat-value { font-size: 1rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="game-container">
+        
+        <!-- UI: Top HUD -->
+        <div id="hud-top" class="panel">
+            <div class="hud-stat">
+                <div class="text-[10px] text-gray-400 uppercase tracking-wider">Phase</div>
+                <div id="ui-phase" class="hud-stat-value text-blue-400">Foundation</div>
+            </div>
+            <div class="hud-stat">
+                <div class="text-[10px] text-gray-400 uppercase tracking-wider">Budget (5D)</div>
+                <div id="ui-budget" class="hud-stat-value stat-budget">$150,000</div>
+            </div>
+            <div class="hud-stat">
+                <div class="text-[10px] text-gray-400 uppercase tracking-wider">Time (4D)</div>
+                <div id="ui-time" class="hud-stat-value stat-time">Day 1 / 45</div>
+            </div>
+        </div>
+
+        <!-- UI: Left Panel -->
+        <div id="panel-tools" class="panel">
+            <h2 class="text-lg font-bold flex items-center gap-2 border-b border-gray-600 pb-2">
+                <i class="fas fa-cubes text-blue-400"></i> BIM Library
+            </h2>
+            
+            <div id="tools-scroll">
+                <!-- Structure -->
+                <div class="text-xs font-bold mt-2 text-gray-400 uppercase">Structure</div>
+                
+                <div class="tool-card active" data-type="foundation">
+                    <div class="tool-icon text-gray-400"><i class="fas fa-square-full"></i></div>
+                    <div class="flex-grow">
+                        <div class="font-bold text-sm">Concrete Footing</div>
+                        <div class="text-[10px] text-gray-400">Cost: $1,000 | Time: 2d</div>
+                    </div>
+                </div>
+
+                <div class="tool-card" data-type="column">
+                    <div class="tool-icon text-gray-300"><i class="fas fa-bars"></i></div>
+                    <div class="flex-grow">
+                        <div class="font-bold text-sm">Concrete Column</div>
+                        <div class="text-[10px] text-gray-400">Cost: $500 | Time: 1d</div>
+                    </div>
+                </div>
+                
+                <div class="tool-card" data-type="beam">
+                    <div class="tool-icon text-gray-400"><i class="fas fa-minus"></i></div>
+                    <div class="flex-grow">
+                        <div class="font-bold text-sm">Steel Beam</div>
+                        <div class="text-[10px] text-gray-400">Cost: $750 | Time: 1d</div>
+                    </div>
+                </div>
+
+                <div class="tool-card" data-type="slab">
+                    <div class="tool-icon text-gray-400"><i class="fas fa-layer-group"></i></div>
+                    <div class="flex-grow">
+                        <div class="font-bold text-sm">Concrete Slab (Floor)</div>
+                        <div class="text-[10px] text-gray-400">Cost: $1,500 | Time: 2d</div>
+                    </div>
+                </div>
+
+                <!-- Architecture -->
+                <div class="text-xs font-bold mt-2 text-gray-400 uppercase">Architecture</div>
+                <div class="tool-card" data-type="wall-brick">
+                    <div class="tool-icon text-red-400"><i class="fas fa-th-large"></i></div>
+                    <div class="flex-grow">
+                        <div class="font-bold text-sm">Brick Wall</div>
+                        <div class="text-[10px] text-gray-400">Cost: $1,200 | Time: 2d</div>
+                    </div>
+                </div>
+
+                <div class="tool-card" data-type="wall-glass">
+                    <div class="tool-icon text-blue-300"><i class="fas fa-border-all"></i></div>
+                    <div class="flex-grow">
+                        <div class="font-bold text-sm">Curtain Wall (Glass)</div>
+                        <div class="text-[10px] text-gray-400">Cost: $2,500 | Time: 1d</div>
+                    </div>
+                </div>
+
+                <!-- MEP -->
+                <div class="text-xs font-bold mt-2 text-gray-400 uppercase">MEP Systems</div>
+                <div class="tool-card" data-type="pipe">
+                    <div class="tool-icon text-blue-400"><i class="fas fa-water"></i></div>
+                    <div class="flex-grow">
+                        <div class="font-bold text-sm">Plumbing Pipe</div>
+                        <div class="text-[10px] text-gray-400">Cost: $300 | Time: 1d</div>
+                    </div>
+                </div>
+                <div class="tool-card" data-type="hvac">
+                    <div class="tool-icon text-gray-400"><i class="fas fa-wind"></i></div>
+                    <div class="flex-grow">
+                        <div class="font-bold text-sm">HVAC Duct</div>
+                        <div class="text-[10px] text-gray-400">Cost: $2,000 | Time: 2d</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-2 pt-3 border-t border-gray-600 flex flex-col gap-2">
+                <button id="btn-rotate" class="btn btn-secondary text-sm">
+                    <i class="fas fa-sync"></i> Rotate Element (R)
+                </button>
+                <button id="btn-delete" class="btn btn-danger text-sm">
+                    <i class="fas fa-trash"></i> Delete Mode (X)
+                </button>
+            </div>
+        </div>
+
+        <!-- UI: Right Panel -->
+        <div id="panel-info" class="panel">
+            <h2 class="text-lg font-bold mb-2 flex items-center gap-2 border-b border-gray-600 pb-2">
+                <i class="fas fa-search text-green-400"></i> BIM Inspector
+            </h2>
+            
+            <div id="inspector-data" class="bg-gray-800 p-3 rounded mb-2 text-xs hidden shadow-inner border border-gray-700">
+                <div class="font-bold text-blue-300 border-b border-gray-600 pb-1 mb-2" id="insp-title">Element Name</div>
+                <div class="grid grid-cols-2 gap-y-1 gap-x-2">
+                    <div class="text-gray-400">ID:</div><div id="insp-id" class="text-right font-mono">---</div>
+                    <div class="text-gray-400">Category:</div><div id="insp-cat" class="text-right">---</div>
+                    <div class="text-gray-400">Cost:</div><div id="insp-cost" class="text-right text-green-400 font-bold">---</div>
+                    <div class="text-gray-400">Time (4D):</div><div id="insp-time" class="text-right text-yellow-400">---</div>
+                    <div class="text-gray-400">Volume:</div><div id="insp-vol" class="text-right">---</div>
+                </div>
+            </div>
+            <div id="inspector-empty" class="text-xs text-gray-400 italic mb-2 p-3 bg-gray-800 rounded border border-gray-700">
+                Hover over an element to view its 5D BIM data.
+            </div>
+
+            <h3 class="text-xs font-bold text-gray-300 uppercase tracking-wider mb-1">Clash Logs & Events</h3>
+            <div id="log-container">
+                <div class="log-entry text-gray-400">System initialized. Ready for construction.</div>
+            </div>
+
+            <div class="mt-4 pt-3 border-t border-gray-600">
+                <div class="text-xs mb-1 flex justify-between font-bold">
+                    <span>Project Completion</span>
+                    <span id="ui-progress-text" class="text-blue-400">0%</span>
+                </div>
+                <div class="progress-bar-bg">
+                    <div id="ui-progress-fill" class="progress-bar-fill"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3D Canvas -->
+        <div id="canvas-container"></div>
+
+        <!-- Start Screen -->
+        <div id="start-screen">
+            <h1 class="text-4xl md:text-5xl font-bold text-blue-400 mb-4 drop-shadow-lg">BIM Builder Pro</h1>
+            <p class="text-base md:text-lg mb-6 max-w-2xl text-gray-300">
+                Selamat datang di Simulator Building Information Modeling! Pelajari bagaimana elemen 3D memuat data Biaya (5D) dan Waktu (4D), serta hindari benturan (Clash Detection).
+            </p>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-left max-w-2xl mb-8 bg-gray-800 p-6 rounded-lg border border-gray-700 shadow-xl">
+                <div>
+                    <h3 class="text-lg font-bold text-white mb-3"><i class="fas fa-mouse text-blue-400 mr-2"></i> Kontrol</h3>
+                    <ul class="list-disc pl-5 text-sm text-gray-400 space-y-1">
+                        <li><strong>Klik / Tap:</strong> Pasang elemen</li>
+                        <li><strong>Drag / Geser:</strong> Putar Kamera</li>
+                        <li><strong>Scroll / Pinch:</strong> Zoom in/out</li>
+                        <li><strong>Tombol R:</strong> Putar elemen (Rotasi)</li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="text-lg font-bold text-white mb-3"><i class="fas fa-bullseye text-red-400 mr-2"></i> Misi Proyek</h3>
+                    <ul class="list-disc pl-5 text-sm text-gray-400 space-y-1">
+                        <li>Bangun konstruksi tanpa melebihi <strong>Budget $150,000</strong>.</li>
+                        <li>Awas <strong>Clash Detection</strong>! Pipa tidak bisa menembus dinding padat.</li>
+                        <li>Capai target progres 100% tepat waktu.</li>
+                    </ul>
+                </div>
+            </div>
+            <button id="btn-start" class="btn text-lg px-8 py-4 bg-blue-600 hover:bg-blue-500 rounded-full shadow-[0_0_15px_rgba(37,99,235,0.6)] transform transition hover:scale-105 uppercase tracking-wider">
+                Mulai Proyek <i class="fas fa-rocket ml-2"></i>
+            </button>
+        </div>
+
+    </div>
+
+    <script>
+        // Game State
+        const GAME_STATE = {
+            budget: 150000,
+            spent: 0,
+            day: 1,
+            maxDays: 45,
+            elementsBuilt: 0,
+            targetElements: 30, // Goal to reach 100% completion
+            currentTool: 'foundation',
+            isDeleteMode: false,
+            currentRotation: 0, // Element rotation (0, 90, 180, 270 deg)
+            gridSize: 30,
+            gridDivisions: 30,
+            placedObjects: [], 
+        };
+
+        // Material Definitions
+        const BIM_LIBRARY = {
+            'foundation': { name: 'Concrete Footing', cost: 1000, time: 2, category: 'structure', color: 0x555555, size: [2, 1, 2], type: 'solid' },
+            'column': { name: 'Concrete Column', cost: 500, time: 1, category: 'structure', color: 0x888888, size: [1, 4, 1], type: 'solid' },
+            'beam': { name: 'Steel Beam', cost: 750, time: 1, category: 'structure', color: 0x4a4a4a, size: [4, 0.5, 1], type: 'solid' },
+            'slab': { name: 'Concrete Slab', cost: 1500, time: 2, category: 'structure', color: 0x9ca3af, size: [4, 0.5, 4], type: 'solid' },
+            'wall-brick': { name: 'Brick Wall', cost: 1200, time: 2, category: 'architecture', color: 0xa52a2a, size: [4, 4, 0.5], type: 'solid' },
+            'wall-glass': { name: 'Curtain Wall', cost: 2500, time: 1, category: 'architecture', color: 0x87ceeb, opacity: 0.6, transparent: true, size: [4, 4, 0.2], type: 'solid' },
+            'pipe': { name: 'Plumbing Pipe', cost: 300, time: 1, category: 'mep', color: 0x3b82f6, size: [4, 0.3, 0.3], type: 'mep' },
+            'hvac': { name: 'HVAC Duct', cost: 2000, time: 2, category: 'mep', color: 0xd1d5db, size: [4, 0.8, 0.8], type: 'mep' }
+        };
+
+        // DOM Elements
+        const uiBudget = document.getElementById('ui-budget');
+        const uiTime = document.getElementById('ui-time');
+        const uiPhase = document.getElementById('ui-phase');
+        const logContainer = document.getElementById('log-container');
+        const toolCards = document.querySelectorAll('.tool-card');
+        const btnDelete = document.getElementById('btn-delete');
+        const btnRotate = document.getElementById('btn-rotate');
+        const inspectorData = document.getElementById('inspector-data');
+        const inspectorEmpty = document.getElementById('inspector-empty');
+        
+        // Three.js Setup
+        const container = document.getElementById('canvas-container');
+        const scene = new THREE.Scene();
+        scene.fog = new THREE.FogExp2(0x1a202c, 0.015);
+
+        const camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 1, 1000);
+        camera.position.set(20, 25, 20);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        renderer.setSize(container.clientWidth, container.clientHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // optimize performance
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        container.appendChild(renderer.domElement);
+
+        // OrbitControls for robust camera movement (touch & mouse)
+        const controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+        controls.maxPolarAngle = Math.PI / 2 - 0.05; // Don't go below ground
+        controls.minDistance = 5;
+        controls.maxDistance = 100;
+        // Map Left Click to Rotate for standard 3D behavior, allowing Tap for placement
+        controls.mouseButtons = {
+            LEFT: THREE.MOUSE.ROTATE,
+            MIDDLE: THREE.MOUSE.DOLLY,
+            RIGHT: THREE.MOUSE.PAN
+        };
+
+        // Lighting
+        scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+        const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+        dirLight.position.set(20, 30, 10);
+        dirLight.castShadow = true;
+        dirLight.shadow.mapSize.width = 2048;
+        dirLight.shadow.mapSize.height = 2048;
+        dirLight.shadow.camera.left = -20;
+        dirLight.shadow.camera.right = 20;
+        dirLight.shadow.camera.top = 20;
+        dirLight.shadow.camera.bottom = -20;
+        scene.add(dirLight);
+
+        // Grid & Ground
+        const gridHelper = new THREE.GridHelper(GAME_STATE.gridSize, GAME_STATE.gridDivisions, 0x4a5568, 0x2d3748);
+        gridHelper.position.y = -0.01;
+        scene.add(gridHelper);
+
+        const plane = new THREE.Mesh(
+            new THREE.PlaneGeometry(GAME_STATE.gridSize, GAME_STATE.gridSize),
+            new THREE.MeshStandardMaterial({ color: 0x1f2937, depthWrite: false })
+        );
+        plane.rotation.x = -Math.PI / 2;
+        plane.receiveShadow = true;
+        scene.add(plane);
+
+        // Interaction setup
+        const raycaster = new THREE.Raycaster();
+        const mouse = new THREE.Vector2();
+        
+        let rollOverGeo, rollOverMaterial, rollOverMesh;
+        rollOverMaterial = new THREE.MeshBasicMaterial({ color: 0x00ff00, opacity: 0.5, transparent: true, wireframe: true });
+        rollOverMesh = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), rollOverMaterial);
+        scene.add(rollOverMesh);
+
+        function createGeometryForTool(type) {
+            const size = BIM_LIBRARY[type].size;
+            return new THREE.BoxGeometry(size[0], size[1], size[2]);
+        }
+
+        function updatePreviewMesh(type) {
+            scene.remove(rollOverMesh);
+            rollOverGeo = createGeometryForTool(type);
+            rollOverMaterial.color.setHex(0x00ff00);
+            rollOverMesh = new THREE.Mesh(rollOverGeo, rollOverMaterial);
+            rollOverMesh.rotation.y = GAME_STATE.currentRotation;
+            scene.add(rollOverMesh);
+        }
+
+        function generateBimId(category) {
+            const prefix = category.substring(0, 3).toUpperCase();
+            const num = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+            return `${prefix}-${num}`;
+        }
+
+        function checkClash(newBoxObj) {
+            const newType = BIM_LIBRARY[GAME_STATE.currentTool].type;
+            const box1 = new THREE.Box3().setFromObject(newBoxObj);
+            box1.expandByScalar(-0.05); // Allow touching edges
+
+            for (let i = 0; i < GAME_STATE.placedObjects.length; i++) {
+                const existing = GAME_STATE.placedObjects[i];
+                const box2 = new THREE.Box3().setFromObject(existing.mesh);
+                box2.expandByScalar(-0.05);
+
+                if (box1.intersectsBox(box2)) {
+                    if ((newType === 'mep' && existing.bimData.type === 'solid') || 
+                        (newType === 'solid' && existing.bimData.type === 'mep') ||
+                        (newType === 'solid' && existing.bimData.type === 'solid')) {
+                        logMessage(`🚨 CLASH DETECTED: Collides with ${existing.bimData.name} (${existing.bimData.id})`, 'error');
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        function placeObject(intersect) {
+            const tool = GAME_STATE.currentTool;
+            const data = BIM_LIBRARY[tool];
+
+            if (GAME_STATE.spent + data.cost > GAME_STATE.budget) {
+                logMessage(`❌ BUDGET OVERRUN: Cannot afford ${data.name} ($${data.cost})`, 'error');
+                return;
+            }
+
+            // Snap logic based on rollover mesh's current calculated position
+            if (checkClash(rollOverMesh)) {
+                rollOverMaterial.color.setHex(0xff0000);
+                setTimeout(() => rollOverMaterial.color.setHex(0x00ff00), 500);
+                return; 
+            }
+
+            const geo = createGeometryForTool(tool);
+            const mat = new THREE.MeshStandardMaterial({ 
+                color: data.color, 
+                transparent: data.transparent || false,
+                opacity: data.opacity || 1.0,
+                roughness: 0.7
+            });
+            const mesh = new THREE.Mesh(geo, mat);
+            
+            mesh.position.copy(rollOverMesh.position);
+            mesh.rotation.y = GAME_STATE.currentRotation;
+            mesh.castShadow = true;
+            mesh.receiveShadow = true;
+            scene.add(mesh);
+
+            const bimObj = {
+                mesh: mesh,
+                bimData: {
+                    id: generateBimId(data.category),
+                    name: data.name,
+                    category: data.category,
+                    cost: data.cost,
+                    time: data.time,
+                    type: data.type,
+                    volume: (data.size[0] * data.size[1] * data.size[2]).toFixed(2) + ' m³'
+                }
+            };
+            
+            GAME_STATE.placedObjects.push(bimObj);
+            
+            GAME_STATE.spent += data.cost;
+            GAME_STATE.day += data.time;
+            GAME_STATE.elementsBuilt++;
+            
+            updateHUD();
+            logMessage(`✅ Placed: ${data.name} [${bimObj.bimData.id}]. Cost: $${data.cost}`);
+            updateProgress();
+        }
+
+        function deleteObject(intersect) {
+            const objIndex = GAME_STATE.placedObjects.findIndex(obj => obj.mesh === intersect.object);
+            if (objIndex !== -1) {
+                const obj = GAME_STATE.placedObjects[objIndex];
+                GAME_STATE.spent -= obj.bimData.cost;
+                scene.remove(obj.mesh);
+                GAME_STATE.placedObjects.splice(objIndex, 1);
+                GAME_STATE.elementsBuilt--;
+                
+                logMessage(`🗑️ Removed: ${obj.bimData.name} [${obj.bimData.id}]`, 'warning');
+                updateHUD();
+                updateProgress();
+                hideInspector();
+            }
+        }
+
+        function updateHUD() {
+            uiBudget.innerText = `$${GAME_STATE.spent.toLocaleString()} / $${GAME_STATE.budget.toLocaleString()}`;
+            uiBudget.style.color = GAME_STATE.spent > GAME_STATE.budget * 0.8 ? 'var(--warning)' : 'var(--success)';
+            
+            uiTime.innerText = `Day ${GAME_STATE.day} / ${GAME_STATE.maxDays}`;
+            uiTime.style.color = GAME_STATE.day > GAME_STATE.maxDays ? 'var(--danger)' : 'var(--warning)';
+            
+            if (GAME_STATE.elementsBuilt > 20) uiPhase.innerText = "Finishing / MEP";
+            else if (GAME_STATE.elementsBuilt > 5) uiPhase.innerText = "Superstructure";
+            else uiPhase.innerText = "Foundation";
+        }
+
+        function updateProgress() {
+            const pct = Math.min(100, Math.round((GAME_STATE.elementsBuilt / GAME_STATE.targetElements) * 100));
+            document.getElementById('ui-progress-fill').style.width = `${pct}%`;
+            document.getElementById('ui-progress-text').innerText = `${pct}%`;
+            if(pct === 100) logMessage(`🎉 Target Milestone Reached!`, 'success');
+        }
+
+        function logMessage(msg, type = 'normal') {
+            const div = document.createElement('div');
+            div.className = `log-entry ${type === 'error' ? 'log-error' : (type === 'warning' ? 'text-yellow-400' : 'log-success')}`;
+            div.innerText = `[Day ${GAME_STATE.day}] ${msg}`;
+            logContainer.appendChild(div);
+            logContainer.scrollTop = logContainer.scrollHeight;
+        }
+
+        function showInspector(bimData) {
+            inspectorEmpty.classList.add('hidden');
+            inspectorData.classList.remove('hidden');
+            
+            document.getElementById('insp-title').innerText = bimData.name;
+            document.getElementById('insp-id').innerText = bimData.id;
+            document.getElementById('insp-cat').innerText = bimData.category.toUpperCase();
+            document.getElementById('insp-cost').innerText = `$${bimData.cost.toLocaleString()}`;
+            document.getElementById('insp-time').innerText = `${bimData.time} Days`;
+            document.getElementById('insp-vol').innerText = bimData.volume;
+        }
+
+        function hideInspector() {
+            inspectorEmpty.classList.remove('hidden');
+            inspectorData.classList.add('hidden');
+        }
+
+        // Pointer Logic distinguishing drag vs click
+        let isPointerDragging = false;
+        let pointerDownPos = { x: 0, y: 0 };
+
+        function onPointerMoveHover(event) {
+            const rect = container.getBoundingClientRect();
+            mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+            mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+            raycaster.setFromCamera(mouse, camera);
+            const intersectables = GAME_STATE.placedObjects.map(obj => obj.mesh).concat([plane]);
+            const intersects = raycaster.intersectObjects(intersectables);
+
+            if (intersects.length > 0) {
+                const intersect = intersects[0];
+
+                if (!GAME_STATE.isDeleteMode) {
+                    const data = BIM_LIBRARY[GAME_STATE.currentTool];
+                    const voxel = new THREE.Vector3();
+                    voxel.copy(intersect.point).add(intersect.face.normal);
+                    
+                    // Simple grid snapping
+                    voxel.x = Math.floor(voxel.x) + 0.5;
+                    voxel.z = Math.floor(voxel.z) + 0.5;
+                    // Y snapping depends on stacking
+                    voxel.y = Math.floor(voxel.y) + (data.size[1] / 2); 
+                    
+                    rollOverMesh.position.copy(voxel);
+                    rollOverMesh.visible = true;
+
+                    if (intersect.object !== plane) {
+                        const hoveredObj = GAME_STATE.placedObjects.find(obj => obj.mesh === intersect.object);
+                        if (hoveredObj) showInspector(hoveredObj.bimData);
+                    } else {
+                        hideInspector();
+                    }
+                } else {
+                    rollOverMesh.visible = false;
+                    if (intersect.object !== plane) {
+                        intersect.object.material.emissive.setHex(0xff0000);
+                        setTimeout(() => { if(intersect.object.material) intersect.object.material.emissive.setHex(0x000000) }, 100);
+                        const hoveredObj = GAME_STATE.placedObjects.find(obj => obj.mesh === intersect.object);
+                        if (hoveredObj) showInspector(hoveredObj.bimData);
+                    }
+                }
+            } else {
+                rollOverMesh.visible = false;
+                hideInspector();
+            }
+        }
+
+        container.addEventListener('pointerdown', (e) => {
+            pointerDownPos = { x: e.clientX, y: e.clientY };
+            isPointerDragging = false;
+        });
+
+        container.addEventListener('pointermove', (e) => {
+            if (Math.abs(e.clientX - pointerDownPos.x) > 3 || Math.abs(e.clientY - pointerDownPos.y) > 3) {
+                isPointerDragging = true;
+            }
+            onPointerMoveHover(e);
+        });
+
+        container.addEventListener('pointerup', (e) => {
+            // If dragging, don't place object
+            if (isPointerDragging) return;
+            // Only left click or touch
+            if (e.button !== 0 && e.pointerType === 'mouse') return;
+            // Ignore if clicking UI
+            if (e.target.closest('.panel') || e.target.closest('button')) return;
+
+            raycaster.setFromCamera(mouse, camera);
+            const intersectables = GAME_STATE.placedObjects.map(obj => obj.mesh).concat([plane]);
+            const intersects = raycaster.intersectObjects(intersectables);
+
+            if (intersects.length > 0) {
+                if (GAME_STATE.isDeleteMode && intersects[0].object !== plane) {
+                    deleteObject(intersects[0]);
+                } else if (!GAME_STATE.isDeleteMode) {
+                    placeObject(intersects[0]);
+                }
+            }
+        });
+
+        // Tool Selection
+        toolCards.forEach(card => {
+            card.addEventListener('click', () => {
+                GAME_STATE.isDeleteMode = false;
+                btnDelete.classList.remove('bg-red-800', 'border', 'border-white');
+                
+                toolCards.forEach(c => c.classList.remove('active'));
+                card.classList.add('active');
+                
+                GAME_STATE.currentTool = card.dataset.type;
+                updatePreviewMesh(GAME_STATE.currentTool);
+                rollOverMesh.visible = true;
+            });
+        });
+
+        // Rotation Logic
+        function rotateElement() {
+            GAME_STATE.currentRotation += Math.PI / 2;
+            rollOverMesh.rotation.y = GAME_STATE.currentRotation;
+        }
+        btnRotate.addEventListener('click', rotateElement);
+        window.addEventListener('keydown', (e) => {
+            if (e.key.toLowerCase() === 'r') rotateElement();
+            if (e.key.toLowerCase() === 'x') btnDelete.click();
+        });
+
+        // Delete Mode Toggle
+        btnDelete.addEventListener('click', () => {
+            GAME_STATE.isDeleteMode = !GAME_STATE.isDeleteMode;
+            if (GAME_STATE.isDeleteMode) {
+                toolCards.forEach(c => c.classList.remove('active'));
+                btnDelete.classList.add('bg-red-800', 'border', 'border-white');
+                rollOverMesh.visible = false;
+            } else {
+                btnDelete.classList.remove('bg-red-800', 'border', 'border-white');
+                toolCards[0].click();
+            }
+        });
+
+        // Start Game
+        document.getElementById('btn-start').addEventListener('click', () => {
+            document.getElementById('start-screen').style.display = 'none';
+        });
+
+        // Window Resize
+        window.addEventListener('resize', () => {
+            camera.aspect = container.clientWidth / container.clientHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(container.clientWidth, container.clientHeight);
+        }, false);
+
+        updatePreviewMesh(GAME_STATE.currentTool);
+
+        // Animation Loop
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update(); // Required for damping
+            
+            if (rollOverMesh.visible && !GAME_STATE.isDeleteMode) {
+                rollOverMaterial.opacity = 0.4 + Math.sin(Date.now() * 0.005) * 0.2;
+            }
+
+            renderer.render(scene, camera);
+        }
+
+        animate();
+
+    </script>
+</body>
+</html>

@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Materi Interaktif: Pengantar BIM</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --neon-blue: #0ea5e9;
+            --neon-purple: #8b5cf6;
+            --neon-green: #10b981;
+            --bg-color: #0f172a;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: #f8fafc;
+            overflow-x: hidden;
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(14, 165, 233, 0.1), transparent 30%),
+                radial-gradient(circle at 90% 80%, rgba(139, 92, 246, 0.1), transparent 30%),
+                linear-gradient(rgba(15, 23, 42, 0.9), rgba(15, 23, 42, 0.9)),
+                url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMSIgY3k9IjEiIHI9IjEiIGZpbGw9InJnYmEoMjU1LDI1NSwyNTUsMC4wNSkiLz48L3N2Zz4=');
+            min-height: 100vh;
+        }
+
+        .font-cyber {
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        /* Glassmorphism */
+        .glass-panel {
+            background: rgba(30, 41, 59, 0.6);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Network Graph Styles */
+        .network-container {
+            position: relative;
+            width: 100%;
+            height: 60vh;
+            min-height: 400px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .node {
+            position: absolute;
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: rgba(15, 23, 42, 0.8);
+            border: 2px solid var(--neon-blue);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 15px rgba(14, 165, 233, 0.4);
+            z-index: 10;
+        }
+
+        .node:hover:not(.locked) {
+            transform: scale(1.15);
+            box-shadow: 0 0 25px rgba(14, 165, 233, 0.8);
+            background: rgba(14, 165, 233, 0.2);
+        }
+
+        .node.locked {
+            border-color: #475569;
+            box-shadow: none;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .node.completed {
+            border-color: var(--neon-green);
+            box-shadow: 0 0 15px rgba(16, 185, 129, 0.6);
+        }
+        
+        .node.completed .status-icon {
+            color: var(--neon-green);
+        }
+
+        .node-label {
+            position: absolute;
+            bottom: -30px;
+            white-space: nowrap;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #cbd5e1;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+            pointer-events: none;
+            transition: all 0.3s;
+        }
+
+        .node:hover .node-label {
+            color: #fff;
+        }
+
+        .line {
+            position: absolute;
+            height: 2px;
+            background: linear-gradient(90deg, var(--neon-blue) 0%, transparent 50%, var(--neon-blue) 100%);
+            background-size: 200% 100%;
+            animation: pulse-line 2s infinite linear;
+            transform-origin: left center;
+            z-index: 1;
+            opacity: 0.5;
+        }
+
+        .line.locked {
+            background: #475569;
+            animation: none;
+        }
+
+        .line.completed {
+            background: var(--neon-green);
+            animation: none;
+            box-shadow: 0 0 8px var(--neon-green);
+        }
+
+        @keyframes pulse-line {
+            0% { background-position: 100% 0; }
+            100% { background-position: -100% 0; }
+        }
+
+        /* Modal Animations */
+        .modal-enter {
+            animation: modalFadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        .modal-exit {
+            animation: modalFadeOut 0.3s ease-in forwards;
+        }
+
+        @keyframes modalFadeIn {
+            from { opacity: 0; transform: scale(0.95) translateY(10px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        @keyframes modalFadeOut {
+            from { opacity: 1; transform: scale(1) translateY(0); }
+            to { opacity: 0; transform: scale(0.95) translateY(10px); }
+        }
+
+        /* Option Button */
+        .quiz-option {
+            transition: all 0.2s;
+        }
+        .quiz-option:hover:not(:disabled) {
+            background: rgba(14, 165, 233, 0.15);
+            border-color: var(--neon-blue);
+            padding-left: 1.5rem;
+        }
+        
+        /* Particle effects for core */
+        .core-pulse {
+            animation: corePulse 2s infinite alternate;
+        }
+        
+        @keyframes corePulse {
+            0% { box-shadow: 0 0 20px rgba(139, 92, 246, 0.4); }
+            100% { box-shadow: 0 0 50px rgba(139, 92, 246, 0.8), 0 0 100px rgba(139, 92, 246, 0.4); }
+        }
+    </style>
+</head>
+<body class="flex flex-col">
+
+    <!-- Header -->
+    <header class="p-6 text-center relative z-20">
+        <div class="inline-block px-4 py-1 rounded-full border border-purple-500/30 bg-purple-500/10 text-purple-400 text-xs font-bold mb-3 tracking-widest uppercase">
+            Sistem Pembelajaran Interaktif
+        </div>
+        <h1 class="text-4xl md:text-5xl font-black font-cyber text-transparent bg-clip-text bg-gradient-to-r from-sky-400 to-purple-500 drop-shadow-lg mb-2">
+            MATA PELAJARAN: BIM
+        </h1>
+        <p class="text-slate-400 max-w-2xl mx-auto text-sm md:text-base">
+            (Building Information Modeling) - Akses node data di bawah ini secara berurutan untuk mempelajari materi.
+        </p>
+    </header>
+
+    <!-- Main Interactive Area -->
+    <main class="flex-1 relative w-full max-w-5xl mx-auto flex flex-col items-center justify-center p-4">
+        
+        <div class="w-full flex justify-between px-8 mb-4 z-20">
+            <div class="glass-panel px-4 py-2 rounded-lg font-cyber text-sky-400 border-sky-500/30">
+                PROGRES: <span id="progress-text" class="text-white font-bold">0%</span>
+            </div>
+            <a href="index.html" class="glass-panel px-4 py-2 rounded-lg font-cyber text-slate-300 hover:text-white hover:border-slate-400 transition-colors">
+                KELUAR
+            </a>
+        </div>
+
+        <!-- Network Graph -->
+        <div class="network-container glass-panel rounded-3xl" id="network-area">
+            <!-- Lines will be injected here via JS -->
+            <div id="lines-container" class="absolute inset-0"></div>
+            
+            <!-- Nodes will be injected here via JS -->
+            <div id="nodes-container" class="absolute inset-0"></div>
+            
+            <!-- Central Core -->
+            <div class="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 w-32 h-32 rounded-full bg-slate-900 border-4 border-purple-500 flex items-center justify-center core-pulse z-0 flex-col" id="core-node">
+                <span class="text-4xl mb-1">🧠</span>
+                <span class="font-cyber text-[10px] text-purple-300 font-bold tracking-wider">BIM CORE</span>
+            </div>
+        </div>
+        
+    </main>
+
+    <!-- Footer -->
+    <footer class="p-4 text-center text-slate-600 text-xs z-20">
+        &copy; 2026 DPIB - Sistem Pembelajaran Interaktif
+    </footer>
+
+    <!-- Modal Overlay -->
+    <div id="modal-overlay" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        
+        <!-- Modal Content Box -->
+        <div id="modal-content" class="glass-panel w-full max-w-2xl rounded-2xl border border-sky-500/50 shadow-[0_0_40px_rgba(14,165,233,0.3)] flex flex-col max-h-[90vh] overflow-hidden hidden relative">
+            
+            <!-- Decorators -->
+            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-sky-400 to-purple-500"></div>
+            
+            <div class="p-6 md:p-8 overflow-y-auto flex-1 custom-scrollbar">
+                
+                <!-- Materi Section -->
+                <div id="section-materi">
+                    <div class="flex items-center gap-4 mb-6">
+                        <div class="w-12 h-12 rounded-lg bg-sky-500/20 flex items-center justify-center text-2xl border border-sky-500/50" id="modal-icon">
+                            📘
+                        </div>
+                        <div>
+                            <div class="text-sky-400 font-cyber text-xs font-bold tracking-widest mb-1" id="modal-subtitle">NODE DATA 01</div>
+                            <h2 class="text-2xl md:text-3xl font-bold text-white" id="modal-title">Judul Materi</h2>
+                        </div>
+                    </div>
+                    
+                    <div class="prose prose-invert prose-sky max-w-none text-slate-300 leading-relaxed mb-8" id="modal-body">
+                        <!-- Content injected via JS -->
+                    </div>
+                    
+                    <div class="flex justify-end">
+                        <button onclick="showQuiz()" class="font-cyber bg-sky-600 hover:bg-sky-500 text-white px-8 py-3 rounded-lg font-bold tracking-wide transition-all hover:shadow-[0_0_20px_rgba(14,165,233,0.5)] flex items-center gap-2">
+                            LANJUT KE EVALUASI <span class="text-xl">➔</span>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Quiz Section -->
+                <div id="section-quiz" class="hidden">
+                    <div class="flex items-center gap-3 mb-6">
+                        <span class="text-2xl">⚡</span>
+                        <h2 class="text-xl font-bold text-yellow-400 font-cyber">VERIFIKASI DATA NODE</h2>
+                    </div>
+                    
+                    <div class="bg-slate-900/80 p-5 rounded-xl border border-slate-700 mb-6 shadow-inner">
+                        <p class="text-lg font-semibold text-white mb-2" id="quiz-question">Pertanyaan di sini?</p>
+                    </div>
+                    
+                    <div class="flex flex-col gap-3" id="quiz-options">
+                        <!-- Options injected via JS -->
+                    </div>
+                    
+                    <div id="quiz-feedback" class="mt-4 p-4 rounded-lg font-bold text-center hidden">
+                        <!-- Feedback injected via JS -->
+                    </div>
+                </div>
+                
+            </div>
+            
+            <button onclick="closeModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+        </div>
+        
+        <!-- Victory Screen Box -->
+        <div id="victory-content" class="glass-panel w-full max-w-lg rounded-2xl border-2 border-purple-500 shadow-[0_0_50px_rgba(139,92,246,0.5)] p-8 text-center hidden flex flex-col items-center">
+            <div class="text-6xl mb-4">🏆</div>
+            <h2 class="text-3xl font-black font-cyber text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-500 mb-2">MODUL SELESAI!</h2>
+            <p class="text-slate-300 mb-8">Selamat! Kamu telah menguasai konsep dasar Building Information Modeling.</p>
+            <a href="index.html" class="font-cyber bg-purple-600 hover:bg-purple-500 text-white px-8 py-3 rounded-lg font-bold tracking-wide transition-all hover:shadow-[0_0_20px_rgba(139,92,246,0.6)] w-full">
+                KEMBALI KE MENU UTAMA
+            </a>
+        </div>
+    </div>
+
+    <!-- Audio Effects -->
+    <script>
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        function playSound(type) {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            const now = audioCtx.currentTime;
+            
+            if (type === 'hover') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(400, now);
+                osc.frequency.exponentialRampToValueAtTime(600, now + 0.1);
+                gain.gain.setValueAtTime(0.05, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+                osc.start(now); osc.stop(now + 0.1);
+            } 
+            else if (type === 'click') {
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(800, now);
+                gain.gain.setValueAtTime(0.1, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+                osc.start(now); osc.stop(now + 0.15);
+            }
+            else if (type === 'correct') {
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(440, now);
+                osc.frequency.setValueAtTime(660, now + 0.1);
+                osc.frequency.setValueAtTime(880, now + 0.2);
+                gain.gain.setValueAtTime(0.1, now);
+                gain.gain.setValueAtTime(0.1, now + 0.3);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+                osc.start(now); osc.stop(now + 0.4);
+            }
+            else if (type === 'wrong') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(200, now);
+                osc.frequency.exponentialRampToValueAtTime(100, now + 0.3);
+                gain.gain.setValueAtTime(0.1, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+                osc.start(now); osc.stop(now + 0.3);
+            }
+            else if (type === 'unlock') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(523.25, now);
+                gain.gain.setValueAtTime(0.1, now);
+                gain.gain.linearRampToValueAtTime(0, now + 1);
+                
+                const osc2 = audioCtx.createOscillator();
+                osc2.type = 'sine';
+                osc2.frequency.setValueAtTime(659.25, now + 0.1);
+                osc2.connect(gain);
+                
+                const osc3 = audioCtx.createOscillator();
+                osc3.type = 'sine';
+                osc3.frequency.setValueAtTime(783.99, now + 0.2);
+                osc3.connect(gain);
+                
+                osc.start(now); osc.stop(now + 1);
+                osc2.start(now + 0.1); osc2.stop(now + 1);
+                osc3.start(now + 0.2); osc3.stop(now + 1);
+            }
+        }
+    </script>
+
+    <!-- Game Logic -->
+    <script>
+        const nodesData = [
+            {
+                id: 1, icon: '❓', title: 'Apa Itu BIM?',
+                content: `
+                    <p class="mb-4"><strong class="text-sky-300 text-lg">BIM (Building Information Modeling)</strong> adalah teknologi dan proses membuat model 3D bangunan yang sudah dilengkapi dengan data informasi secara menyeluruh.</p>
+                    <div class="bg-slate-900/60 p-4 rounded-lg border-l-4 border-sky-500 mb-4">
+                        <h4 class="font-bold text-white mb-2">Bedanya dengan gambar biasa:</h4>
+                        <p>Jika kamu menggambar pintu di AutoCAD, itu cuma kumpulan garis. Tapi jika kamu membuat pintu di BIM, sistem tahu bahwa itu adalah objek <strong>"Pintu Kayu Solid"</strong> lengkap dengan data ukuran, merk, harga, dan material pendukungnya.</p>
+                    </div>
+                `,
+                question: 'Jika kamu menggambar pintu di BIM, apa bedanya dengan menggambar di software 2D biasa?',
+                options: ['BIM hanya menghasilkan kumpulan garis yang lebih rapi', 'Sistem BIM tahu bahwa itu objek "Pintu" lengkap dengan data ukuran, harga', 'BIM tidak bisa digunakan untuk menggambar pintu', 'Di BIM, pintu akan bergerak sendiri secara otomatis'],
+                correctAnswer: 1
+            },
+            {
+                id: 2, icon: '🔍', title: 'Membedah Singkatan B-I-M',
+                content: `
+                    <p class="mb-4">Singkatan BIM menyimpan tiga pilar utama konsep ini:</p>
+                    <ul class="space-y-4">
+                        <li class="flex gap-3"><span class="font-black text-2xl text-purple-400 font-cyber">B</span><div><strong class="text-white text-lg">Building:</strong><p class="text-slate-400">Fokus pada objek konstruksi (gedung, jalan, jembatan).</p></div></li>
+                        <li class="flex gap-3"><span class="font-black text-2xl text-purple-400 font-cyber">I</span><div><strong class="text-white text-lg">Information:</strong><p class="text-slate-400">Ini <strong>"nyawa"</strong> utamanya. Berisi data spesifikasi bahan, volume material, harga, hingga jadwal pemasangan.</p></div></li>
+                        <li class="flex gap-3"><span class="font-black text-2xl text-purple-400 font-cyber">M</span><div><strong class="text-white text-lg">Modeling:</strong><p class="text-slate-400">Representasi visual 3D yang akurat sesuai aslinya di dunia nyata.</p></div></li>
+                    </ul>
+                `,
+                question: 'Manakah huruf dari BIM yang disebut sebagai "nyawa" utama karena berisi spesifikasi bahan dan volume material?',
+                options: ['B (Building)', 'I (Information)', 'M (Modeling)', 'B dan M sama-sama nyawa utama'],
+                correctAnswer: 1
+            },
+            {
+                id: 3, icon: '🚀', title: 'Keunggulan Utama',
+                content: `
+                    <p class="mb-4 font-semibold text-white">Kenapa anak DPIB harus pindah belajar ke BIM? Berikut keunggulannya:</p>
+                    <div class="space-y-4">
+                        <div class="bg-slate-800/50 p-4 rounded border border-slate-700">
+                            <h4 class="font-bold text-sky-400 mb-1">🔗 Otomatis Terhubung (Parametrik)</h4>
+                            <p class="text-sm">Jika kamu menggeser tembok di denah 2D, maka gambar 3D, gambar potongan, tampak, dan hitungan volume RAB akan otomatis berubah sendiri tanpa harus digambar ulang.</p>
+                        </div>
+                        <div class="bg-slate-800/50 p-4 rounded border border-slate-700">
+                            <h4 class="font-bold text-red-400 mb-1">💥 Deteksi Tabrakan (Clash Detection)</h4>
+                            <p class="text-sm">Komputer akan memberi peringatan error jika ada kesalahan desain, misalnya pipa air menabrak pondasi beton. Kesalahan dicegah sebelum bangunan fisik dikerjakan.</p>
+                        </div>
+                        <div class="bg-slate-800/50 p-4 rounded border border-slate-700">
+                            <h4 class="font-bold text-green-400 mb-1">🤝 Kerja Bareng (Kolaborasi)</h4>
+                            <p class="text-sm">Arsitek, ahli struktur, dan ahli instalasi listrik bisa menggambar di dalam satu file model yang sama dari komputer masing-masing.</p>
+                        </div>
+                    </div>
+                `,
+                question: 'Fitur apa pada BIM yang berfungsi mencegah kesalahan di lapangan, seperti pipa menabrak pondasi beton?',
+                options: ['Parametrik Modeling', 'Kolaborasi Cloud', 'Clash Detection (Deteksi Tabrakan)', 'Auto-Render 3D'],
+                correctAnswer: 2
+            },
+            {
+                id: 4, icon: '🧊', title: 'Mengenal Dimensi BIM',
+                content: `
+                    <p class="mb-4">BIM bukan sekadar 3D, tapi punya "dimensi" tambahan. Anak DPIB wajib tahu level dasar ini:</p>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="glass-panel p-4 rounded-xl text-center border-b-4 border-sky-400">
+                            <div class="text-3xl mb-2 font-black text-sky-400 font-cyber">3D</div>
+                            <h4 class="font-bold text-white mb-2">Visual & Geometri</h4>
+                            <p class="text-xs text-slate-300">Fokus pada model visual bentuk fisik dan geometri ruang secara tiga dimensi.</p>
+                        </div>
+                        <div class="glass-panel p-4 rounded-xl text-center border-b-4 border-yellow-400">
+                            <div class="text-3xl mb-2 font-black text-yellow-400 font-cyber">4D</div>
+                            <h4 class="font-bold text-white mb-2">Penjadwalan (Waktu)</h4>
+                            <p class="text-xs text-slate-300">Model 3D digabungkan dengan jadwal proyek. Bangunan bisa dianimasikan proses berdirinya hari ke hari.</p>
+                        </div>
+                        <div class="glass-panel p-4 rounded-xl text-center border-b-4 border-green-400">
+                            <div class="text-3xl mb-2 font-black text-green-400 font-cyber">5D</div>
+                            <h4 class="font-bold text-white mb-2">Estimasi Biaya (RAB)</h4>
+                            <p class="text-xs text-slate-300">Model dihubungkan dengan data harga. Mengubah tebal dinding akan otomatis merubah tagihan RAB.</p>
+                        </div>
+                    </div>
+                `,
+                question: 'Dimensi BIM mana yang menghubungkan model 3D dengan data harga material (RAB)?',
+                options: ['BIM 3D', 'BIM 4D', 'BIM 5D', 'BIM 6D'],
+                correctAnswer: 2
+            },
+            {
+                id: 5, icon: '💻', title: 'Software BIM Populer',
+                content: `
+                    <p class="mb-4">Berikut adalah software BIM yang wajib diketahui dan sering dipakai di dunia kerja:</p>
+                    <ul class="space-y-4">
+                        <li class="flex items-center gap-4 bg-slate-800/80 p-3 rounded-lg border border-slate-600">
+                            <div class="w-12 h-12 bg-blue-600 rounded-md flex items-center justify-center font-bold text-white">Rev</div>
+                            <div><strong class="text-sky-300">Autodesk Revit</strong><p class="text-xs text-slate-400 mt-1">Paling banyak dipakai di industri karena komplit untuk Arsitektur, Struktur, dan instalasi pipa/listrik (MEP).</p></div>
+                        </li>
+                        <li class="flex items-center gap-4 bg-slate-800/80 p-3 rounded-lg border border-slate-600">
+                            <div class="w-12 h-12 bg-teal-500 rounded-md flex items-center justify-center font-bold text-white">Arc</div>
+                            <div><strong class="text-teal-300">Archicad</strong><p class="text-xs text-slate-400 mt-1">Pilihan favorit banyak arsitek karena antarmukanya mudah dan intuitif untuk desain bangunan.</p></div>
+                        </li>
+                        <li class="flex items-center gap-4 bg-slate-800/80 p-3 rounded-lg border border-slate-600">
+                            <div class="w-12 h-12 bg-blue-800 rounded-md flex items-center justify-center font-bold text-white">Tek</div>
+                            <div><strong class="text-blue-300">Tekla Structures</strong><p class="text-xs text-slate-400 mt-1">Sangat jago untuk fabrikasi struktur besi baja dan pembesian beton bertulang (LOD tinggi).</p></div>
+                        </li>
+                    </ul>
+                `,
+                question: 'Software BIM manakah yang paling dominan karena komplit untuk Arsitektur, Struktur, dan MEP sekaligus?',
+                options: ['Archicad', 'Tekla Structures', 'Autodesk Revit', 'SketchUp'],
+                correctAnswer: 2
+            }
+        ];
+
+        let unlockedNodes = [0]; 
+        let completedNodes = []; 
+        let activeNodeForModal = -1;
+        const totalNodes = nodesData.length;
+        const radius = 150; 
+
+        function renderNetwork() {
+            const nodesContainer = document.getElementById('nodes-container');
+            const linesContainer = document.getElementById('lines-container');
+            nodesContainer.innerHTML = '';
+            linesContainer.innerHTML = '';
+
+            const cx = nodesContainer.clientWidth / 2;
+            const cy = nodesContainer.clientHeight / 2;
+
+            nodesData.forEach((node, index) => {
+                const angle = (index * (360 / totalNodes) - 90) * (Math.PI / 180);
+                let responsiveRadius = window.innerWidth < 640 ? 100 : radius;
+                
+                const nx = cx + responsiveRadius * Math.cos(angle);
+                const ny = cy + responsiveRadius * Math.sin(angle);
+
+                const isUnlocked = unlockedNodes.includes(index);
+                const isCompleted = completedNodes.includes(index);
+                
+                let stateClass = isCompleted ? 'completed' : (isUnlocked ? '' : 'locked');
+
+                const lineLen = responsiveRadius - 40; 
+                const line = document.createElement('div');
+                line.className = 'line ' + stateClass;
+                line.style.width = lineLen + 'px';
+                line.style.left = cx + 'px';
+                line.style.top = cy + 'px';
+                line.style.transform = 'rotate(' + (angle * 180 / Math.PI) + 'deg)';
+                linesContainer.appendChild(line);
+
+                const nodeEl = document.createElement('div');
+                nodeEl.className = 'node ' + stateClass;
+                nodeEl.style.left = (nx - 40) + 'px';
+                nodeEl.style.top = (ny - 40) + 'px';
+                nodeEl.innerHTML = '<span class="status-icon">' + (isCompleted ? '✓' : (isUnlocked ? node.icon : '🔒')) + '</span><span class="node-label">NODE 0' + node.id + '</span>';
+                
+                if (isUnlocked) {
+                    nodeEl.addEventListener('mouseenter', () => playSound('hover'));
+                    nodeEl.addEventListener('click', () => openNode(index));
+                }
+
+                nodesContainer.appendChild(nodeEl);
+            });
+            
+            const pct = Math.floor((completedNodes.length / totalNodes) * 100);
+            document.getElementById('progress-text').innerText = pct + '%';
+        }
+
+        window.addEventListener('resize', renderNetwork);
+
+        function openNode(index) {
+            playSound('click');
+            activeNodeForModal = index;
+            const data = nodesData[index];
+            
+            document.getElementById('modal-icon').innerText = data.icon;
+            document.getElementById('modal-subtitle').innerText = 'NODE DATA 0' + data.id;
+            document.getElementById('modal-title').innerText = data.title;
+            document.getElementById('modal-body').innerHTML = data.content;
+            
+            document.getElementById('section-materi').classList.remove('hidden');
+            document.getElementById('section-quiz').classList.add('hidden');
+            
+            document.getElementById('modal-overlay').classList.remove('hidden');
+            const content = document.getElementById('modal-content');
+            content.classList.remove('hidden');
+            content.classList.remove('modal-exit');
+            content.classList.add('modal-enter');
+        }
+
+        function closeModal() {
+            playSound('click');
+            const content = document.getElementById('modal-content');
+            content.classList.remove('modal-enter');
+            content.classList.add('modal-exit');
+            setTimeout(() => {
+                document.getElementById('modal-overlay').classList.add('hidden');
+                content.classList.add('hidden');
+            }, 300);
+        }
+
+        function showQuiz() {
+            playSound('click');
+            const data = nodesData[activeNodeForModal];
+            document.getElementById('section-materi').classList.add('hidden');
+            document.getElementById('section-quiz').classList.remove('hidden');
+            document.getElementById('quiz-question').innerText = data.question;
+            
+            const optionsContainer = document.getElementById('quiz-options');
+            optionsContainer.innerHTML = '';
+            
+            data.options.forEach((opt, idx) => {
+                const btn = document.createElement('button');
+                btn.className = 'quiz-option text-left w-full bg-slate-800/80 border border-slate-600 p-4 rounded-lg text-slate-300 font-semibold hover:text-white relative';
+                btn.innerHTML = '<span class="inline-block w-6 h-6 rounded-full bg-slate-700 text-center mr-3 text-xs leading-6">' + String.fromCharCode(65 + idx) + '</span> ' + opt;
+                btn.onclick = () => handleAnswer(idx, btn);
+                optionsContainer.appendChild(btn);
+            });
+            
+            document.getElementById('quiz-feedback').classList.add('hidden');
+        }
+
+        function handleAnswer(selectedIndex, btnElement) {
+            const data = nodesData[activeNodeForModal];
+            const isCorrect = selectedIndex === data.correctAnswer;
+            
+            document.querySelectorAll('.quiz-option').forEach(b => {
+                b.disabled = true;
+                b.classList.remove('hover:not(:disabled)');
+                b.style.cursor = 'default';
+            });
+            
+            const feedback = document.getElementById('quiz-feedback');
+            feedback.className = 'mt-4 p-4 rounded-lg font-bold text-center block ';
+            
+            if (isCorrect) {
+                playSound('correct');
+                btnElement.classList.add('bg-green-900/50', 'border-green-500');
+                btnElement.querySelector('span').className = 'inline-block w-6 h-6 rounded-full bg-green-500 text-white text-center mr-3 text-xs leading-6';
+                
+                feedback.classList.add('bg-green-500/20', 'text-green-400', 'border', 'border-green-500');
+                feedback.innerText = 'Jawaban Benar! Data terverifikasi.';
+                
+                if (!completedNodes.includes(activeNodeForModal)) {
+                    completedNodes.push(activeNodeForModal);
+                    if (activeNodeForModal + 1 < totalNodes && !unlockedNodes.includes(activeNodeForModal + 1)) {
+                        unlockedNodes.push(activeNodeForModal + 1);
+                    }
+                }
+                
+                setTimeout(() => {
+                    closeModal();
+                    renderNetwork();
+                    if (completedNodes.length === totalNodes) {
+                        setTimeout(showVictory, 500);
+                    } else {
+                        playSound('unlock');
+                    }
+                }, 1500);
+                
+            } else {
+                playSound('wrong');
+                btnElement.classList.add('bg-red-900/50', 'border-red-500', 'opacity-50');
+                btnElement.querySelector('span').className = 'inline-block w-6 h-6 rounded-full bg-red-500 text-white text-center mr-3 text-xs leading-6';
+                
+                const buttons = document.querySelectorAll('.quiz-option');
+                buttons[data.correctAnswer].classList.add('border-green-500', 'text-green-400');
+                
+                feedback.classList.add('bg-red-500/20', 'text-red-400', 'border', 'border-red-500');
+                feedback.innerHTML = 'Jawaban Salah. Koneksi ditolak.<br><button onclick="openNode(activeNodeForModal)" class="mt-2 text-white underline text-sm">Baca ulang materi</button>';
+            }
+        }
+        
+        function showVictory() {
+            playSound('unlock');
+            document.getElementById('modal-overlay').classList.remove('hidden');
+            document.getElementById('modal-content').classList.add('hidden');
+            const victory = document.getElementById('victory-content');
+            victory.classList.remove('hidden');
+            victory.classList.add('modal-enter');
+            createConfetti();
+        }
+        
+        function createConfetti() {
+            for (let i = 0; i < 50; i++) {
+                const conf = document.createElement('div');
+                conf.style.position = 'fixed';
+                conf.style.width = '10px';
+                conf.style.height = '10px';
+                conf.style.backgroundColor = ['#0ea5e9', '#8b5cf6', '#10b981', '#f59e0b', '#ec4899'][Math.floor(Math.random() * 5)];
+                conf.style.left = Math.random() * 100 + 'vw';
+                conf.style.top = '-10px';
+                conf.style.zIndex = '60';
+                conf.style.borderRadius = Math.random() > 0.5 ? '50%' : '0';
+                document.body.appendChild(conf);
+                
+                const animDuration = Math.random() * 3 + 2;
+                conf.animate([
+                    { transform: 'translate3d(0, 0, 0) rotate(0deg)', opacity: 1 },
+                    { transform: 'translate3d(' + (Math.random()*100 - 50) + 'px, 100vh, 0) rotate(' + (Math.random()*360) + 'deg)', opacity: 0 }
+                ], {
+                    duration: animDuration * 1000,
+                    easing: 'cubic-bezier(.37,0,.63,1)',
+                    fill: 'forwards'
+                });
+                
+                setTimeout(() => conf.remove(), animDuration * 1000);
+            }
+        }
+
+        setTimeout(renderNetwork, 100);
+    </script>
+</body>
+</html>
