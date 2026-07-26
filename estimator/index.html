@@ -225,12 +225,10 @@
             background: rgba(17, 24, 39, 0.95);
             display: flex;
             flex-direction: column;
-            align-items: center;
-            justify-content: center;
             z-index: 1000;
             text-align: center;
-            padding: 20px;
             backdrop-filter: blur(5px);
+            overflow-y: auto;
         }
 
         /* Progress Bar */
@@ -524,41 +522,43 @@
 
         <!-- Start Screen -->
         <div id="start-screen">
-            <h1 class="text-4xl md:text-5xl font-bold text-blue-400 mb-4 drop-shadow-lg">BIM Builder Pro</h1>
-            <p class="text-base md:text-lg mb-6 max-w-2xl text-gray-300">
-                Selamat datang di Simulator Building Information Modeling! Versi Peta Skala Besar (1 Kampung). Bangun konstruksi, geser posisi sesuka hati, dan kelola Proyek (4D & 5D).
-            </p>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-left max-w-2xl mb-8 bg-gray-800 p-6 rounded-lg border border-gray-700 shadow-xl">
-                <div>
-                    <h3 class="text-lg font-bold text-white mb-3"><i class="fas fa-mouse text-blue-400 mr-2"></i> Kontrol Baru</h3>
-                    <ul class="list-disc pl-5 text-sm text-gray-400 space-y-1">
-                        <li><strong>Mode Pilih & Geser:</strong> Klik elemen yang sudah dipasang, lalu geser posisinya menggunakan tombol panah di layar. Sangat cocok untuk pengguna sentuh (Mobile)!</li>
-                        <li><strong>Drag / Geser:</strong> Putar Kamera</li>
-                        <li><strong>Scroll / Pinch:</strong> Zoom in/out</li>
-                    </ul>
+            <div class="m-auto w-full max-w-4xl flex flex-col items-center justify-center p-6 md:p-12">
+                <h1 class="text-3xl md:text-5xl font-bold text-blue-400 mb-3 md:mb-4 drop-shadow-lg">BIM Builder Pro</h1>
+                <p class="text-sm md:text-lg mb-4 md:mb-6 max-w-2xl text-gray-300">
+                    Selamat datang di Simulator Building Information Modeling! Versi Peta Skala Besar. Bangun konstruksi, geser posisi sesuka hati, dan kelola Proyek.
+                </p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4 text-left w-full max-w-2xl mb-6 bg-gray-800 p-4 md:p-6 rounded-lg border border-gray-700 shadow-xl">
+                    <div>
+                        <h3 class="text-base md:text-lg font-bold text-white mb-2"><i class="fas fa-mouse text-blue-400 mr-2"></i> Kontrol Baru</h3>
+                        <ul class="list-disc pl-5 text-xs md:text-sm text-gray-400 space-y-1">
+                            <li><strong>Pilih & Geser:</strong> Klik elemen, geser dengan tombol panah di layar (D-Pad).</li>
+                            <li><strong>Drag:</strong> Putar Kamera</li>
+                            <li><strong>Pinch:</strong> Zoom in/out</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h3 class="text-base md:text-lg font-bold text-white mb-2"><i class="fas fa-bullseye text-red-400 mr-2"></i> Misi Skala Besar</h3>
+                        <ul class="list-disc pl-5 text-xs md:text-sm text-gray-400 space-y-1">
+                            <li>Area tanah super luas (500x500 meter).</li>
+                            <li>Anggaran awal <strong>$5,000,000</strong>.</li>
+                            <li>Hindari <strong>Clash Detection</strong>! Objek tak bisa digeser jika menabrak.</li>
+                        </ul>
+                    </div>
                 </div>
-                <div>
-                    <h3 class="text-lg font-bold text-white mb-3"><i class="fas fa-bullseye text-red-400 mr-2"></i> Misi Skala Besar</h3>
-                    <ul class="list-disc pl-5 text-sm text-gray-400 space-y-1">
-                        <li>Area tanah sekarang sangat luas (500x500 meter).</li>
-                        <li>Anggaran ditingkatkan menjadi <strong>$5,000,000</strong>.</li>
-                        <li>Hindari <strong>Clash Detection</strong>! Objek tidak bisa digeser jika menabrak objek lain.</li>
-                    </ul>
+                
+                <div id="project-list-container" class="w-full max-w-2xl bg-gray-800/90 p-4 rounded-xl border border-gray-700 shadow-xl mb-4 md:mb-6">
+                    <h3 class="text-base md:text-lg font-bold text-white mb-2 md:mb-3 border-b border-gray-600 pb-2 text-left flex items-center justify-between">
+                        <span><i class="fas fa-folder-open text-yellow-400 mr-2"></i> Proyek Tersimpan</span>
+                    </h3>
+                    <div id="project-list" class="flex flex-col gap-2 max-h-[30vh] overflow-y-auto pr-2 text-left">
+                        <!-- Daftar proyek dimasukkan lewat JS -->
+                    </div>
                 </div>
+                
+                <button id="btn-new-project" class="btn text-base md:text-lg px-6 md:px-8 py-3 md:py-4 bg-blue-600 hover:bg-blue-500 rounded-full shadow-[0_0_15px_rgba(37,99,235,0.6)] transform transition hover:scale-105 uppercase tracking-wider w-full max-w-2xl">
+                    <i class="fas fa-plus mr-2"></i> Buat Proyek Baru
+                </button>
             </div>
-            
-            <div id="project-list-container" class="w-full max-w-2xl bg-gray-800/90 p-4 rounded-xl border border-gray-700 shadow-xl mb-6">
-                <h3 class="text-lg font-bold text-white mb-3 border-b border-gray-600 pb-2 text-left flex items-center justify-between">
-                    <span><i class="fas fa-folder-open text-yellow-400 mr-2"></i> Proyek Tersimpan</span>
-                </h3>
-                <div id="project-list" class="flex flex-col gap-2 max-h-[25vh] overflow-y-auto pr-2 text-left">
-                    <!-- Daftar proyek dimasukkan lewat JS -->
-                </div>
-            </div>
-            
-            <button id="btn-new-project" class="btn text-lg px-8 py-4 bg-blue-600 hover:bg-blue-500 rounded-full shadow-[0_0_15px_rgba(37,99,235,0.6)] transform transition hover:scale-105 uppercase tracking-wider w-full max-w-2xl">
-                <i class="fas fa-plus mr-2"></i> Buat Proyek Baru
-            </button>
         </div>
 
     </div>
