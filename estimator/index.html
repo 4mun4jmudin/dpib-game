@@ -294,17 +294,33 @@
         }
 
         /* Mobile Adjustments */
-        @media (max-width: 768px) and (orientation: landscape) {
-            #panel-tools { width: 220px; z-index: 40; top: 60px; bottom: 10px; left: 10px; }
+        @media (max-width: 932px) and (orientation: landscape), (max-width: 768px) {
+            #panel-tools { width: 220px; z-index: 40; top: 50px; bottom: 5px; left: 5px; }
             #panel-tools.hidden-panel { left: -240px; }
-            #panel-info { width: 220px; top: 60px; bottom: 10px; right: 10px; height: auto; z-index: 40; }
+            #panel-info { width: 220px; top: 50px; bottom: 5px; right: 5px; height: auto; z-index: 40; }
             #panel-info.hidden-info { right: -240px !important; }
-            #hud-top { width: 90%; top: 10px; padding: 6px 12px; gap: 8px; }
-            .panel { padding: 8px; }
-            .hud-stat-value { font-size: 0.9rem; }
-            .tool-card { padding: 8px; gap: 8px; }
-            .tool-icon { width: 32px; height: 32px; font-size: 1rem; }
+            
+            #hud-top { 
+                width: auto; 
+                max-width: 95%; 
+                top: 5px; 
+                padding: 4px 8px !important; 
+                gap: 8px !important; 
+            }
+            .panel { padding: 6px; }
+            
+            .hud-stat-value { font-size: 0.8rem; white-space: nowrap; }
+            .hud-stat > .text-\[10px\] { display: none !important; }
+            
+            .tool-card { padding: 6px; gap: 6px; }
+            .tool-icon { width: 28px; height: 28px; font-size: 0.9rem; }
             #btn-toggle-tools { width: 32px; height: 32px; right: -32px; }
+            #btn-toggle-info { width: 32px; height: 32px; left: -32px; }
+            
+            #btn-undo, #btn-redo { width: 32px !important; height: 32px !important; font-size: 0.8rem; }
+            #btn-save-exit span { display: none !important; }
+            #btn-save-exit { padding: 6px 10px !important; font-size: 1rem !important; }
+            #hud-top > div.flex { padding-right: 0.5rem !important; }
         }
 
         @media (max-width: 768px) and (orientation: portrait) {
@@ -335,11 +351,11 @@
                 <div id="ui-phase" class="hud-stat-value text-blue-400">Pondasi</div>
             </div>
             <div class="hud-stat">
-                <div class="text-[10px] text-gray-400 uppercase tracking-wider hidden md:block"><i class="fas fa-dollar-sign mr-1"></i>Anggaran (5D)</div>
+                <div class="text-[10px] text-gray-400 uppercase tracking-wider"><i class="fas fa-dollar-sign mr-1"></i>Anggaran (5D)</div>
                 <div id="ui-budget" class="hud-stat-value stat-budget">$5,000,000</div>
             </div>
             <div class="hud-stat">
-                <div class="text-[10px] text-gray-400 uppercase tracking-wider hidden md:block"><i class="fas fa-calendar-alt mr-1"></i>Waktu (4D)</div>
+                <div class="text-[10px] text-gray-400 uppercase tracking-wider"><i class="fas fa-calendar-alt mr-1"></i>Waktu (4D)</div>
                 <div id="ui-time" class="hud-stat-value stat-time">Hari 1 / 365</div>
             </div>
             
