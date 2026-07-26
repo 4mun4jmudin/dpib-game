@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -88,6 +88,33 @@
             display: flex;
             flex-direction: column;
             gap: 12px;
+            transition: left 0.3s ease-in-out;
+        }
+        
+        #panel-tools.hidden-panel {
+            left: -340px;
+        }
+
+        /* Toggle Button */
+        #btn-toggle-tools {
+            position: absolute;
+            right: -40px;
+            top: 16px;
+            width: 40px;
+            height: 40px;
+            background: rgba(31, 41, 55, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-left: none;
+            border-radius: 0 8px 8px 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 5px 0 15px rgba(0,0,0,0.3);
+        }
+        #btn-toggle-tools:hover {
+            background: rgba(55, 65, 81, 0.95);
         }
 
         #tools-scroll {
@@ -167,6 +194,16 @@
         .btn-secondary { background: #4b5563; }
         .btn-secondary:hover { background: #374151; }
 
+        /* D-Pad Styles */
+        .btn-nudge {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            transition: transform 0.1s;
+        }
+        .btn-nudge:active { transform: scale(0.9); }
+
         /* Logs */
         #log-container {
             flex-grow: 1;
@@ -212,137 +249,207 @@
             transition: width 0.3s;
         }
 
+        /* Portrait Mode Overlay */
+        #portrait-overlay {
+            display: none;
+            position: absolute;
+            inset: 0;
+            background: var(--bg-dark);
+            z-index: 9999;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 20px;
+        }
+        #portrait-overlay i {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            animation: rotatePhone 2s infinite ease-in-out;
+            color: var(--primary);
+        }
+        @keyframes rotatePhone {
+            0% { transform: rotate(0deg); }
+            50% { transform: rotate(-90deg); }
+            100% { transform: rotate(-90deg); }
+        }
+
         /* Mobile Adjustments */
-        @media (max-width: 768px) {
-            #panel-tools {
-                width: 45%;
-                top: auto;
-                bottom: 10px;
-                height: 45vh;
-                left: 10px;
-            }
-            #panel-info {
-                width: 45%;
-                top: auto;
-                bottom: 10px;
-                height: 45vh;
-                right: 10px;
-            }
-            #hud-top {
-                width: 95%;
-                min-width: auto;
-                top: 10px;
-                gap: 10px;
-            }
-            .panel { padding: 10px; }
-            .hud-stat-value { font-size: 1rem; }
+        @media (max-width: 768px) and (orientation: landscape) {
+            #panel-tools { width: 220px; z-index: 40; top: 60px; bottom: 10px; left: 10px; }
+            #panel-tools.hidden-panel { left: -240px; }
+            #panel-info { width: 220px; top: 60px; bottom: 10px; right: 10px; height: auto; z-index: 40; }
+            #hud-top { width: 90%; top: 10px; padding: 6px 12px; gap: 8px; }
+            .panel { padding: 8px; }
+            .hud-stat-value { font-size: 0.9rem; }
+            .tool-card { padding: 8px; gap: 8px; }
+            .tool-icon { width: 32px; height: 32px; font-size: 1rem; }
+            #btn-toggle-tools { width: 32px; height: 32px; right: -32px; }
+        }
+
+        @media (max-width: 768px) and (orientation: portrait) {
+            #portrait-overlay { display: flex; }
         }
     </style>
 </head>
 <body>
 
+    <!-- Portrait Mode Overlay -->
+    <div id="portrait-overlay">
+        <i class="fas fa-mobile-alt"></i>
+        <h2 class="text-2xl font-bold mb-3">Putar Perangkat Anda</h2>
+        <p class="text-gray-400 max-w-sm">Aplikasi BIM Builder Pro dirancang untuk layar lanskap (Landscape) agar area kanvas 3D terlihat lebih luas dan kontrol lebih nyaman.</p>
+    </div>
+
     <div id="game-container">
         
         <!-- UI: Top HUD -->
-        <div id="hud-top" class="panel">
-            <div class="hud-stat">
-                <div class="text-[10px] text-gray-400 uppercase tracking-wider">Phase</div>
-                <div id="ui-phase" class="hud-stat-value text-blue-400">Foundation</div>
+        <div id="hud-top" class="panel !flex-row items-center !gap-2 md:!gap-6">
+            <div class="flex gap-2 pr-2 md:pr-4 border-r border-gray-600">
+                <button id="btn-undo" class="w-10 h-10 rounded-full bg-gray-800 border border-gray-600 text-gray-400 hover:text-white hover:bg-gray-700 transition opacity-50 pointer-events-none flex items-center justify-center shadow-lg" title="Undo (Ctrl+Z)"><i class="fas fa-undo"></i></button>
+                <button id="btn-redo" class="w-10 h-10 rounded-full bg-gray-800 border border-gray-600 text-gray-400 hover:text-white hover:bg-gray-700 transition opacity-50 pointer-events-none flex items-center justify-center shadow-lg" title="Redo (Ctrl+Y)"><i class="fas fa-redo"></i></button>
+            </div>
+            
+            <div class="hud-stat hidden md:block">
+                <div class="text-[10px] text-gray-400 uppercase tracking-wider">Fase Proyek</div>
+                <div id="ui-phase" class="hud-stat-value text-blue-400">Pondasi</div>
             </div>
             <div class="hud-stat">
-                <div class="text-[10px] text-gray-400 uppercase tracking-wider">Budget (5D)</div>
-                <div id="ui-budget" class="hud-stat-value stat-budget">$150,000</div>
+                <div class="text-[10px] text-gray-400 uppercase tracking-wider">Anggaran (5D)</div>
+                <div id="ui-budget" class="hud-stat-value stat-budget">$5,000,000</div>
             </div>
             <div class="hud-stat">
-                <div class="text-[10px] text-gray-400 uppercase tracking-wider">Time (4D)</div>
-                <div id="ui-time" class="hud-stat-value stat-time">Day 1 / 45</div>
+                <div class="text-[10px] text-gray-400 uppercase tracking-wider">Waktu (4D)</div>
+                <div id="ui-time" class="hud-stat-value stat-time">Hari 1 / 365</div>
             </div>
+            
+            <button id="btn-save-exit" class="ml-auto flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-3 py-2 md:px-4 md:py-2 rounded-lg shadow-lg transition transform hover:scale-105 text-xs md:text-sm font-bold border border-red-500">
+                <i class="fas fa-sign-out-alt"></i> <span class="hidden md:inline">Keluar</span>
+            </button>
         </div>
 
         <!-- UI: Left Panel -->
         <div id="panel-tools" class="panel">
+            <button id="btn-toggle-tools">
+                <i class="fas fa-chevron-left text-gray-400" id="icon-toggle-tools"></i>
+            </button>
             <h2 class="text-lg font-bold flex items-center gap-2 border-b border-gray-600 pb-2">
-                <i class="fas fa-cubes text-blue-400"></i> BIM Library
+                <i class="fas fa-cubes text-blue-400"></i> Pustaka BIM
             </h2>
             
             <div id="tools-scroll">
                 <!-- Structure -->
-                <div class="text-xs font-bold mt-2 text-gray-400 uppercase">Structure</div>
+                <div class="text-xs font-bold mt-2 text-gray-400 uppercase">Struktur</div>
                 
                 <div class="tool-card active" data-type="foundation">
                     <div class="tool-icon text-gray-400"><i class="fas fa-square-full"></i></div>
                     <div class="flex-grow">
-                        <div class="font-bold text-sm">Concrete Footing</div>
-                        <div class="text-[10px] text-gray-400">Cost: $1,000 | Time: 2d</div>
+                        <div class="font-bold text-sm">Pondasi Tapak</div>
+                        <div class="text-[10px] text-gray-400">Biaya: $1,000 | Waktu: 2hr</div>
                     </div>
                 </div>
 
                 <div class="tool-card" data-type="column">
                     <div class="tool-icon text-gray-300"><i class="fas fa-bars"></i></div>
                     <div class="flex-grow">
-                        <div class="font-bold text-sm">Concrete Column</div>
-                        <div class="text-[10px] text-gray-400">Cost: $500 | Time: 1d</div>
+                        <div class="font-bold text-sm">Kolom Beton</div>
+                        <div class="text-[10px] text-gray-400">Biaya: $500 | Waktu: 1hr</div>
                     </div>
                 </div>
                 
                 <div class="tool-card" data-type="beam">
                     <div class="tool-icon text-gray-400"><i class="fas fa-minus"></i></div>
                     <div class="flex-grow">
-                        <div class="font-bold text-sm">Steel Beam</div>
-                        <div class="text-[10px] text-gray-400">Cost: $750 | Time: 1d</div>
+                        <div class="font-bold text-sm">Balok Baja</div>
+                        <div class="text-[10px] text-gray-400">Biaya: $750 | Waktu: 1hr</div>
                     </div>
                 </div>
 
                 <div class="tool-card" data-type="slab">
                     <div class="tool-icon text-gray-400"><i class="fas fa-layer-group"></i></div>
                     <div class="flex-grow">
-                        <div class="font-bold text-sm">Concrete Slab (Floor)</div>
-                        <div class="text-[10px] text-gray-400">Cost: $1,500 | Time: 2d</div>
+                        <div class="font-bold text-sm">Plat Lantai</div>
+                        <div class="text-[10px] text-gray-400">Biaya: $1,500 | Waktu: 2hr</div>
+                    </div>
+                </div>
+                
+                <div class="tool-card" data-type="stair">
+                    <div class="tool-icon text-gray-500"><i class="fas fa-stream"></i></div>
+                    <div class="flex-grow">
+                        <div class="font-bold text-sm">Tangga Beton</div>
+                        <div class="text-[10px] text-gray-400">Biaya: $2,000 | Waktu: 3hr</div>
+                    </div>
+                </div>
+                
+                <div class="tool-card" data-type="roof">
+                    <div class="tool-icon text-gray-600"><i class="fas fa-caret-up"></i></div>
+                    <div class="flex-grow">
+                        <div class="font-bold text-sm">Atap Beton</div>
+                        <div class="text-[10px] text-gray-400">Biaya: $1,800 | Waktu: 2hr</div>
                     </div>
                 </div>
 
                 <!-- Architecture -->
-                <div class="text-xs font-bold mt-2 text-gray-400 uppercase">Architecture</div>
+                <div class="text-xs font-bold mt-2 text-gray-400 uppercase">Arsitektur</div>
                 <div class="tool-card" data-type="wall-brick">
                     <div class="tool-icon text-red-400"><i class="fas fa-th-large"></i></div>
                     <div class="flex-grow">
-                        <div class="font-bold text-sm">Brick Wall</div>
-                        <div class="text-[10px] text-gray-400">Cost: $1,200 | Time: 2d</div>
+                        <div class="font-bold text-sm">Dinding Bata</div>
+                        <div class="text-[10px] text-gray-400">Biaya: $1,200 | Waktu: 2hr</div>
                     </div>
                 </div>
 
                 <div class="tool-card" data-type="wall-glass">
                     <div class="tool-icon text-blue-300"><i class="fas fa-border-all"></i></div>
                     <div class="flex-grow">
-                        <div class="font-bold text-sm">Curtain Wall (Glass)</div>
-                        <div class="text-[10px] text-gray-400">Cost: $2,500 | Time: 1d</div>
+                        <div class="font-bold text-sm">Dinding Kaca (Curtain)</div>
+                        <div class="text-[10px] text-gray-400">Biaya: $2,500 | Waktu: 1hr</div>
+                    </div>
+                </div>
+                
+                <div class="tool-card" data-type="door">
+                    <div class="tool-icon text-amber-600"><i class="fas fa-door-closed"></i></div>
+                    <div class="flex-grow">
+                        <div class="font-bold text-sm">Pintu Utama</div>
+                        <div class="text-[10px] text-gray-400">Biaya: $400 | Waktu: 1hr</div>
+                    </div>
+                </div>
+                
+                <div class="tool-card" data-type="window">
+                    <div class="tool-icon text-blue-200"><i class="fas fa-window-maximize"></i></div>
+                    <div class="flex-grow">
+                        <div class="font-bold text-sm">Jendela Kaca</div>
+                        <div class="text-[10px] text-gray-400">Biaya: $600 | Waktu: 1hr</div>
                     </div>
                 </div>
 
                 <!-- MEP -->
-                <div class="text-xs font-bold mt-2 text-gray-400 uppercase">MEP Systems</div>
+                <div class="text-xs font-bold mt-2 text-gray-400 uppercase">Sistem MEP</div>
                 <div class="tool-card" data-type="pipe">
                     <div class="tool-icon text-blue-400"><i class="fas fa-water"></i></div>
                     <div class="flex-grow">
-                        <div class="font-bold text-sm">Plumbing Pipe</div>
-                        <div class="text-[10px] text-gray-400">Cost: $300 | Time: 1d</div>
+                        <div class="font-bold text-sm">Pipa Plumbing</div>
+                        <div class="text-[10px] text-gray-400">Biaya: $300 | Waktu: 1hr</div>
                     </div>
                 </div>
                 <div class="tool-card" data-type="hvac">
                     <div class="tool-icon text-gray-400"><i class="fas fa-wind"></i></div>
                     <div class="flex-grow">
-                        <div class="font-bold text-sm">HVAC Duct</div>
-                        <div class="text-[10px] text-gray-400">Cost: $2,000 | Time: 2d</div>
+                        <div class="font-bold text-sm">Saluran HVAC</div>
+                        <div class="text-[10px] text-gray-400">Biaya: $2,000 | Waktu: 2hr</div>
                     </div>
                 </div>
             </div>
 
             <div class="mt-2 pt-3 border-t border-gray-600 flex flex-col gap-2">
+                <button id="btn-select" class="btn btn-secondary text-sm">
+                    <i class="fas fa-hand-pointer"></i> Mode Pilih & Geser (Tap)
+                </button>
                 <button id="btn-rotate" class="btn btn-secondary text-sm">
-                    <i class="fas fa-sync"></i> Rotate Element (R)
+                    <i class="fas fa-sync"></i> Putar Elemen Baru (R)
                 </button>
                 <button id="btn-delete" class="btn btn-danger text-sm">
-                    <i class="fas fa-trash"></i> Delete Mode (X)
+                    <i class="fas fa-trash"></i> Mode Hapus (X)
                 </button>
             </div>
         </div>
@@ -350,36 +457,65 @@
         <!-- UI: Right Panel -->
         <div id="panel-info" class="panel">
             <h2 class="text-lg font-bold mb-2 flex items-center gap-2 border-b border-gray-600 pb-2">
-                <i class="fas fa-search text-green-400"></i> BIM Inspector
+                <i class="fas fa-search text-green-400"></i> Inspektur BIM
             </h2>
             
             <div id="inspector-data" class="bg-gray-800 p-3 rounded mb-2 text-xs hidden shadow-inner border border-gray-700">
-                <div class="font-bold text-blue-300 border-b border-gray-600 pb-1 mb-2" id="insp-title">Element Name</div>
+                <div class="font-bold text-blue-300 border-b border-gray-600 pb-1 mb-2" id="insp-title">Nama Elemen</div>
                 <div class="grid grid-cols-2 gap-y-1 gap-x-2">
                     <div class="text-gray-400">ID:</div><div id="insp-id" class="text-right font-mono">---</div>
-                    <div class="text-gray-400">Category:</div><div id="insp-cat" class="text-right">---</div>
-                    <div class="text-gray-400">Cost:</div><div id="insp-cost" class="text-right text-green-400 font-bold">---</div>
-                    <div class="text-gray-400">Time (4D):</div><div id="insp-time" class="text-right text-yellow-400">---</div>
+                    <div class="text-gray-400">Kategori:</div><div id="insp-cat" class="text-right">---</div>
+                    <div class="text-gray-400">Biaya:</div><div id="insp-cost" class="text-right text-green-400 font-bold">---</div>
+                    <div class="text-gray-400">Waktu (4D):</div><div id="insp-time" class="text-right text-yellow-400">---</div>
                     <div class="text-gray-400">Volume:</div><div id="insp-vol" class="text-right">---</div>
                 </div>
             </div>
             <div id="inspector-empty" class="text-xs text-gray-400 italic mb-2 p-3 bg-gray-800 rounded border border-gray-700">
-                Hover over an element to view its 5D BIM data.
+                Arahkan kursor ke elemen untuk melihat data BIM 5D.
             </div>
 
-            <h3 class="text-xs font-bold text-gray-300 uppercase tracking-wider mb-1">Clash Logs & Events</h3>
+            <h3 class="text-xs font-bold text-gray-300 uppercase tracking-wider mb-1">Log & Benturan (Clash)</h3>
             <div id="log-container">
-                <div class="log-entry text-gray-400">System initialized. Ready for construction.</div>
+                <div class="log-entry text-gray-400">Sistem siap. Area konstruksi super luas (Skala Kampung)!</div>
             </div>
 
             <div class="mt-4 pt-3 border-t border-gray-600">
                 <div class="text-xs mb-1 flex justify-between font-bold">
-                    <span>Project Completion</span>
+                    <span>Progres Proyek</span>
                     <span id="ui-progress-text" class="text-blue-400">0%</span>
                 </div>
                 <div class="progress-bar-bg">
                     <div id="ui-progress-fill" class="progress-bar-fill"></div>
                 </div>
+            </div>
+        </div>
+
+        <!-- D-Pad (Geser Posisi) -->
+        <div id="dpad-container" class="hidden absolute bottom-10 left-1/2 transform -translate-x-1/2 bg-gray-900/95 p-3 md:p-4 rounded-xl border border-gray-600 shadow-[0_10px_40px_rgba(0,0,0,0.8)] z-50 flex gap-4 md:gap-6 backdrop-blur-md">
+            <!-- X/Z Controls -->
+            <div class="grid grid-cols-3 gap-1 md:gap-2">
+                <div></div>
+                <button class="btn-nudge bg-gray-700 hover:bg-gray-600 p-2 md:p-3 rounded" data-dir="z-minus" title="Mundur (Z-)"><i class="fas fa-arrow-up"></i></button>
+                <div></div>
+                <button class="btn-nudge bg-gray-700 hover:bg-gray-600 p-2 md:p-3 rounded" data-dir="x-minus" title="Kiri (X-)"><i class="fas fa-arrow-left"></i></button>
+                <div class="flex items-center justify-center text-[10px] md:text-xs text-gray-400 font-bold">GESER</div>
+                <button class="btn-nudge bg-gray-700 hover:bg-gray-600 p-2 md:p-3 rounded" data-dir="x-plus" title="Kanan (X+)"><i class="fas fa-arrow-right"></i></button>
+                <div></div>
+                <button class="btn-nudge bg-gray-700 hover:bg-gray-600 p-2 md:p-3 rounded" data-dir="z-plus" title="Maju (Z+)"><i class="fas fa-arrow-down"></i></button>
+                <div></div>
+            </div>
+            
+            <!-- Y Controls -->
+            <div class="flex flex-col justify-between gap-1 md:gap-2 border-l border-gray-600 pl-4 md:pl-6">
+                <button class="btn-nudge bg-blue-700 hover:bg-blue-600 p-2 md:p-3 rounded" data-dir="y-plus" title="Naik (Y+)"><i class="fas fa-chevron-up"></i></button>
+                <div class="text-center text-[10px] text-gray-400 font-bold leading-none">TINGGI</div>
+                <button class="btn-nudge bg-blue-700 hover:bg-blue-600 p-2 md:p-3 rounded" data-dir="y-minus" title="Turun (Y-)"><i class="fas fa-chevron-down"></i></button>
+            </div>
+            
+            <!-- Actions -->
+            <div class="flex flex-col justify-between gap-1 md:gap-2 border-l border-gray-600 pl-4 md:pl-6">
+                <button id="btn-nudge-rotate" class="btn-nudge bg-purple-700 hover:bg-purple-600 p-2 md:p-3 rounded" title="Putar 90&deg;"><i class="fas fa-sync"></i></button>
+                <button id="btn-nudge-close" class="btn-nudge bg-green-700 hover:bg-green-600 p-2 md:p-3 rounded" title="Selesai Geser"><i class="fas fa-check"></i></button>
             </div>
         </div>
 
@@ -390,61 +526,81 @@
         <div id="start-screen">
             <h1 class="text-4xl md:text-5xl font-bold text-blue-400 mb-4 drop-shadow-lg">BIM Builder Pro</h1>
             <p class="text-base md:text-lg mb-6 max-w-2xl text-gray-300">
-                Selamat datang di Simulator Building Information Modeling! Pelajari bagaimana elemen 3D memuat data Biaya (5D) dan Waktu (4D), serta hindari benturan (Clash Detection).
+                Selamat datang di Simulator Building Information Modeling! Versi Peta Skala Besar (1 Kampung). Bangun konstruksi, geser posisi sesuka hati, dan kelola Proyek (4D & 5D).
             </p>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-left max-w-2xl mb-8 bg-gray-800 p-6 rounded-lg border border-gray-700 shadow-xl">
                 <div>
-                    <h3 class="text-lg font-bold text-white mb-3"><i class="fas fa-mouse text-blue-400 mr-2"></i> Kontrol</h3>
+                    <h3 class="text-lg font-bold text-white mb-3"><i class="fas fa-mouse text-blue-400 mr-2"></i> Kontrol Baru</h3>
                     <ul class="list-disc pl-5 text-sm text-gray-400 space-y-1">
-                        <li><strong>Klik / Tap:</strong> Pasang elemen</li>
+                        <li><strong>Mode Pilih & Geser:</strong> Klik elemen yang sudah dipasang, lalu geser posisinya menggunakan tombol panah di layar. Sangat cocok untuk pengguna sentuh (Mobile)!</li>
                         <li><strong>Drag / Geser:</strong> Putar Kamera</li>
                         <li><strong>Scroll / Pinch:</strong> Zoom in/out</li>
-                        <li><strong>Tombol R:</strong> Putar elemen (Rotasi)</li>
                     </ul>
                 </div>
                 <div>
-                    <h3 class="text-lg font-bold text-white mb-3"><i class="fas fa-bullseye text-red-400 mr-2"></i> Misi Proyek</h3>
+                    <h3 class="text-lg font-bold text-white mb-3"><i class="fas fa-bullseye text-red-400 mr-2"></i> Misi Skala Besar</h3>
                     <ul class="list-disc pl-5 text-sm text-gray-400 space-y-1">
-                        <li>Bangun konstruksi tanpa melebihi <strong>Budget $150,000</strong>.</li>
-                        <li>Awas <strong>Clash Detection</strong>! Pipa tidak bisa menembus dinding padat.</li>
-                        <li>Capai target progres 100% tepat waktu.</li>
+                        <li>Area tanah sekarang sangat luas (500x500 meter).</li>
+                        <li>Anggaran ditingkatkan menjadi <strong>$5,000,000</strong>.</li>
+                        <li>Hindari <strong>Clash Detection</strong>! Objek tidak bisa digeser jika menabrak objek lain.</li>
                     </ul>
                 </div>
             </div>
-            <button id="btn-start" class="btn text-lg px-8 py-4 bg-blue-600 hover:bg-blue-500 rounded-full shadow-[0_0_15px_rgba(37,99,235,0.6)] transform transition hover:scale-105 uppercase tracking-wider">
-                Mulai Proyek <i class="fas fa-rocket ml-2"></i>
+            
+            <div id="project-list-container" class="w-full max-w-2xl bg-gray-800/90 p-4 rounded-xl border border-gray-700 shadow-xl mb-6">
+                <h3 class="text-lg font-bold text-white mb-3 border-b border-gray-600 pb-2 text-left flex items-center justify-between">
+                    <span><i class="fas fa-folder-open text-yellow-400 mr-2"></i> Proyek Tersimpan</span>
+                </h3>
+                <div id="project-list" class="flex flex-col gap-2 max-h-[25vh] overflow-y-auto pr-2 text-left">
+                    <!-- Daftar proyek dimasukkan lewat JS -->
+                </div>
+            </div>
+            
+            <button id="btn-new-project" class="btn text-lg px-8 py-4 bg-blue-600 hover:bg-blue-500 rounded-full shadow-[0_0_15px_rgba(37,99,235,0.6)] transform transition hover:scale-105 uppercase tracking-wider w-full max-w-2xl">
+                <i class="fas fa-plus mr-2"></i> Buat Proyek Baru
             </button>
         </div>
 
     </div>
 
     <script>
+        // History State
+        const HISTORY = [];
+        let HISTORY_INDEX = -1;
+
         // Game State
         const GAME_STATE = {
-            budget: 150000,
+            projectId: null,
+            projectName: 'Proyek Baru',
+            budget: 5000000,
             spent: 0,
             day: 1,
-            maxDays: 45,
+            maxDays: 365,
             elementsBuilt: 0,
-            targetElements: 30, // Goal to reach 100% completion
+            targetElements: 200, 
             currentTool: 'foundation',
-            isDeleteMode: false,
-            currentRotation: 0, // Element rotation (0, 90, 180, 270 deg)
-            gridSize: 30,
-            gridDivisions: 30,
+            mode: 'build', // 'build', 'select', 'delete'
+            selectedObj: null,
+            currentRotation: 0, 
+            gridSize: 1000, // Very large!
+            gridDivisions: 200, // 5x5 unit squares visually
             placedObjects: [], 
         };
 
         // Material Definitions
         const BIM_LIBRARY = {
-            'foundation': { name: 'Concrete Footing', cost: 1000, time: 2, category: 'structure', color: 0x555555, size: [2, 1, 2], type: 'solid' },
-            'column': { name: 'Concrete Column', cost: 500, time: 1, category: 'structure', color: 0x888888, size: [1, 4, 1], type: 'solid' },
-            'beam': { name: 'Steel Beam', cost: 750, time: 1, category: 'structure', color: 0x4a4a4a, size: [4, 0.5, 1], type: 'solid' },
-            'slab': { name: 'Concrete Slab', cost: 1500, time: 2, category: 'structure', color: 0x9ca3af, size: [4, 0.5, 4], type: 'solid' },
-            'wall-brick': { name: 'Brick Wall', cost: 1200, time: 2, category: 'architecture', color: 0xa52a2a, size: [4, 4, 0.5], type: 'solid' },
-            'wall-glass': { name: 'Curtain Wall', cost: 2500, time: 1, category: 'architecture', color: 0x87ceeb, opacity: 0.6, transparent: true, size: [4, 4, 0.2], type: 'solid' },
-            'pipe': { name: 'Plumbing Pipe', cost: 300, time: 1, category: 'mep', color: 0x3b82f6, size: [4, 0.3, 0.3], type: 'mep' },
-            'hvac': { name: 'HVAC Duct', cost: 2000, time: 2, category: 'mep', color: 0xd1d5db, size: [4, 0.8, 0.8], type: 'mep' }
+            'foundation': { name: 'Pondasi Tapak', cost: 1000, time: 2, category: 'struktur', color: 0x555555, size: [2, 1, 2], type: 'solid' },
+            'column': { name: 'Kolom Beton', cost: 500, time: 1, category: 'struktur', color: 0x888888, size: [1, 4, 1], type: 'solid' },
+            'beam': { name: 'Balok Baja', cost: 750, time: 1, category: 'struktur', color: 0x4a4a4a, size: [4, 0.5, 1], type: 'solid' },
+            'slab': { name: 'Plat Lantai', cost: 1500, time: 2, category: 'struktur', color: 0x9ca3af, size: [4, 0.5, 4], type: 'solid' },
+            'stair': { name: 'Tangga Beton', cost: 2000, time: 3, category: 'struktur', color: 0x737373, size: [2, 4, 4], type: 'solid' },
+            'roof': { name: 'Atap Beton', cost: 1800, time: 2, category: 'struktur', color: 0x6b7280, size: [4, 0.5, 4], type: 'solid' },
+            'wall-brick': { name: 'Dinding Bata', cost: 1200, time: 2, category: 'arsitektur', color: 0xa52a2a, size: [4, 4, 0.5], type: 'solid' },
+            'wall-glass': { name: 'Dinding Kaca', cost: 2500, time: 1, category: 'arsitektur', color: 0x87ceeb, opacity: 0.6, transparent: true, size: [4, 4, 0.2], type: 'solid' },
+            'door': { name: 'Pintu Utama', cost: 400, time: 1, category: 'arsitektur', color: 0x8b4513, size: [1.5, 3, 0.2], type: 'solid' },
+            'window': { name: 'Jendela Kaca', cost: 600, time: 1, category: 'arsitektur', color: 0xadd8e6, opacity: 0.6, transparent: true, size: [2, 2, 0.2], type: 'solid' },
+            'pipe': { name: 'Pipa Plumbing', cost: 300, time: 1, category: 'mep', color: 0x3b82f6, size: [4, 0.3, 0.3], type: 'mep' },
+            'hvac': { name: 'Saluran HVAC', cost: 2000, time: 2, category: 'mep', color: 0xd1d5db, size: [4, 0.8, 0.8], type: 'mep' }
         };
 
         // DOM Elements
@@ -453,34 +609,54 @@
         const uiPhase = document.getElementById('ui-phase');
         const logContainer = document.getElementById('log-container');
         const toolCards = document.querySelectorAll('.tool-card');
+        
         const btnDelete = document.getElementById('btn-delete');
+        const btnSelect = document.getElementById('btn-select');
         const btnRotate = document.getElementById('btn-rotate');
+        
+        const btnUndo = document.getElementById('btn-undo');
+        const btnRedo = document.getElementById('btn-redo');
+        
         const inspectorData = document.getElementById('inspector-data');
         const inspectorEmpty = document.getElementById('inspector-empty');
+        const panelTools = document.getElementById('panel-tools');
+        const iconToggleTools = document.getElementById('icon-toggle-tools');
+        const dpadContainer = document.getElementById('dpad-container');
         
+        // Panel Toggle Logic
+        document.getElementById('btn-toggle-tools').addEventListener('click', () => {
+            panelTools.classList.toggle('hidden-panel');
+            if (panelTools.classList.contains('hidden-panel')) {
+                iconToggleTools.classList.replace('fa-chevron-left', 'fa-chevron-right');
+            } else {
+                iconToggleTools.classList.replace('fa-chevron-right', 'fa-chevron-left');
+            }
+        });
+
         // Three.js Setup
         const container = document.getElementById('canvas-container');
         const scene = new THREE.Scene();
-        scene.fog = new THREE.FogExp2(0x1a202c, 0.015);
+        // Kurangi kepadatan kabut agar jarak pandang jauh (Skala Kampung)
+        scene.fog = new THREE.FogExp2(0x1a202c, 0.002);
 
-        const camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 1, 1000);
-        camera.position.set(20, 25, 20);
+        // Tambah jarak render kamera (far plane) ke 5000
+        const camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 1, 5000);
+        camera.position.set(30, 40, 30);
 
         const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
         renderer.setSize(container.clientWidth, container.clientHeight);
-        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // optimize performance
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); 
         renderer.shadowMap.enabled = true;
         renderer.shadowMap.type = THREE.PCFSoftShadowMap;
         container.appendChild(renderer.domElement);
 
-        // OrbitControls for robust camera movement (touch & mouse)
         const controls = new THREE.OrbitControls(camera, renderer.domElement);
         controls.enableDamping = true;
+        controls.enableZoom = false; // Custom CAD zoom
         controls.dampingFactor = 0.05;
-        controls.maxPolarAngle = Math.PI / 2 - 0.05; // Don't go below ground
+        controls.maxPolarAngle = Math.PI / 2 - 0.02; // Don't go below ground
         controls.minDistance = 5;
-        controls.maxDistance = 100;
-        // Map Left Click to Rotate for standard 3D behavior, allowing Tap for placement
+        controls.maxDistance = 1500; // Bisa zoom out sangat jauh
         controls.mouseButtons = {
             LEFT: THREE.MOUSE.ROTATE,
             MIDDLE: THREE.MOUSE.DOLLY,
@@ -490,17 +666,18 @@
         // Lighting
         scene.add(new THREE.AmbientLight(0xffffff, 0.6));
         const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
-        dirLight.position.set(20, 30, 10);
+        dirLight.position.set(200, 300, 100);
         dirLight.castShadow = true;
-        dirLight.shadow.mapSize.width = 2048;
-        dirLight.shadow.mapSize.height = 2048;
-        dirLight.shadow.camera.left = -20;
-        dirLight.shadow.camera.right = 20;
-        dirLight.shadow.camera.top = 20;
-        dirLight.shadow.camera.bottom = -20;
+        dirLight.shadow.camera.left = -500;
+        dirLight.shadow.camera.right = 500;
+        dirLight.shadow.camera.top = 500;
+        dirLight.shadow.camera.bottom = -500;
+        // Optimization: don't use high res shadow map for huge area on mobile, keep it reasonable
+        dirLight.shadow.mapSize.width = 1024;
+        dirLight.shadow.mapSize.height = 1024;
         scene.add(dirLight);
 
-        // Grid & Ground
+        // Grid & Ground (Sangat Luas)
         const gridHelper = new THREE.GridHelper(GAME_STATE.gridSize, GAME_STATE.gridDivisions, 0x4a5568, 0x2d3748);
         gridHelper.position.y = -0.01;
         scene.add(gridHelper);
@@ -517,21 +694,229 @@
         const raycaster = new THREE.Raycaster();
         const mouse = new THREE.Vector2();
         
+        // CAD-Style Zoom to Cursor (Wheel & Pinch)
+        function performCADZoom(clientX, clientY, delta, isPinch = false) {
+            const rect = renderer.domElement.getBoundingClientRect();
+            mouse.x = ((clientX - rect.left) / rect.width) * 2 - 1;
+            mouse.y = -((clientY - rect.top) / rect.height) * 2 + 1;
+            
+            raycaster.setFromCamera(mouse, camera);
+            const intersectables = GAME_STATE.placedObjects.map(o => o.mesh).concat([plane]);
+            const intersects = raycaster.intersectObjects(intersectables, true);
+            
+            if (intersects.length > 0) {
+                const zoomFactor = isPinch ? delta : (delta > 0 ? 1.15 : 0.85);
+                const targetPoint = intersects[0].point;
+                
+                const distToTarget = camera.position.distanceTo(targetPoint);
+                const minD = controls.minDistance;
+                const maxD = controls.maxDistance;
+                
+                let newDist = distToTarget * zoomFactor;
+                if (newDist < minD) newDist = minD;
+                if (newDist > maxD) newDist = maxD;
+                
+                const actualZoom = newDist / distToTarget;
+                
+                camera.position.lerpVectors(targetPoint, camera.position, actualZoom);
+                controls.target.lerpVectors(targetPoint, controls.target, actualZoom);
+                
+                controls.update();
+            } else {
+                const zoomFactor = isPinch ? delta : (delta > 0 ? 1.15 : 0.85);
+                camera.position.lerpVectors(controls.target, camera.position, zoomFactor);
+                controls.update();
+            }
+        }
+
+        container.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            performCADZoom(e.clientX, e.clientY, e.deltaY);
+        }, { passive: false });
+
+        let initialPinchDist = null;
+        container.addEventListener('touchstart', (e) => {
+            if (e.touches.length === 2) {
+                const dx = e.touches[0].clientX - e.touches[1].clientX;
+                const dy = e.touches[0].clientY - e.touches[1].clientY;
+                initialPinchDist = Math.sqrt(dx*dx + dy*dy);
+            }
+        }, { passive: false });
+
+        container.addEventListener('touchmove', (e) => {
+            if (e.touches.length === 2 && initialPinchDist) {
+                e.preventDefault();
+                const dx = e.touches[0].clientX - e.touches[1].clientX;
+                const dy = e.touches[0].clientY - e.touches[1].clientY;
+                const dist = Math.sqrt(dx*dx + dy*dy);
+                
+                const centerX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+                const centerY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+                
+                const zoomFactor = initialPinchDist / dist; 
+                performCADZoom(centerX, centerY, zoomFactor, true);
+                
+                initialPinchDist = dist; 
+            }
+        }, { passive: false });
+        
+        container.addEventListener('touchend', (e) => {
+            if (e.touches.length < 2) initialPinchDist = null;
+        });
+        
         let rollOverGeo, rollOverMaterial, rollOverMesh;
         rollOverMaterial = new THREE.MeshBasicMaterial({ color: 0x00ff00, opacity: 0.5, transparent: true, wireframe: true });
         rollOverMesh = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), rollOverMaterial);
         scene.add(rollOverMesh);
 
-        function createGeometryForTool(type) {
+        // Selection Box Helper
+        const selectionBox = new THREE.BoxHelper(plane, 0xffff00);
+        selectionBox.visible = false;
+        // Buat garis seleksi sedikit lebih tebal/terang
+        selectionBox.material.linewidth = 2;
+        scene.add(selectionBox);
+
+        function setMode(newMode) {
+            GAME_STATE.mode = newMode;
+            btnDelete.classList.remove('bg-red-800', 'border', 'border-white');
+            btnSelect.classList.remove('bg-blue-800', 'border', 'border-white');
+            
+            if (newMode === 'build') {
+                rollOverMesh.visible = true;
+                deselectObject();
+            } else if (newMode === 'delete') {
+                btnDelete.classList.add('bg-red-800', 'border', 'border-white');
+                toolCards.forEach(c => c.classList.remove('active'));
+                rollOverMesh.visible = false;
+                deselectObject();
+            } else if (newMode === 'select') {
+                btnSelect.classList.add('bg-blue-800', 'border', 'border-white');
+                toolCards.forEach(c => c.classList.remove('active'));
+                rollOverMesh.visible = false;
+            }
+        }
+
+        function selectObject(mesh) {
+            const obj = GAME_STATE.placedObjects.find(o => o.mesh === mesh);
+            if (!obj) return;
+            
+            GAME_STATE.selectedObj = obj;
+            selectionBox.setFromObject(mesh);
+            selectionBox.visible = true;
+            
+            dpadContainer.classList.remove('hidden');
+            showInspector(obj.bimData);
+            
+            // Auto-Focus Camera (Zoom to Object)
+            const targetPoint = new THREE.Vector3();
+            obj.mesh.getWorldPosition(targetPoint);
+            
+            const startTarget = controls.target.clone();
+            let progress = 0;
+            
+            function animateFocus() {
+                progress += 0.05;
+                if (progress <= 1) {
+                    controls.target.lerpVectors(startTarget, targetPoint, progress);
+                    controls.update();
+                    requestAnimationFrame(animateFocus);
+                }
+            }
+            animateFocus();
+        }
+
+        function deselectObject() {
+            GAME_STATE.selectedObj = null;
+            selectionBox.visible = false;
+            dpadContainer.classList.add('hidden');
+            hideInspector();
+        }
+
+        function createMeshForTool(type, material) {
             const size = BIM_LIBRARY[type].size;
-            return new THREE.BoxGeometry(size[0], size[1], size[2]);
+            const group = new THREE.Group();
+            
+            if (type === 'pipe') {
+                const geo = new THREE.CylinderGeometry(size[1]/2, size[1]/2, size[0], 16);
+                const mesh = new THREE.Mesh(geo, material);
+                mesh.rotation.z = Math.PI / 2;
+                group.add(mesh);
+            } 
+            else if (type === 'foundation') {
+                const baseGeo = new THREE.BoxGeometry(size[0], size[1]*0.4, size[2]);
+                const base = new THREE.Mesh(baseGeo, material);
+                base.position.y = -size[1]*0.3;
+                
+                const topGeo = new THREE.CylinderGeometry(size[0]*0.3, size[0]*0.6, size[1]*0.6, 4);
+                const top = new THREE.Mesh(topGeo, material);
+                top.rotation.y = Math.PI / 4;
+                top.position.y = size[1]*0.2;
+                
+                group.add(base); group.add(top);
+            }
+            else if (type === 'stair') {
+                const steps = 8;
+                const sD = size[2] / steps;
+                const sH = size[1] / steps;
+                for(let i=0; i<steps; i++) {
+                    const step = new THREE.Mesh(new THREE.BoxGeometry(size[0], sH, sD), material);
+                    step.position.set(0, -size[1]/2 + sH/2 + (i*sH), -size[2]/2 + sD/2 + (i*sD));
+                    group.add(step);
+                }
+            }
+            else if (type === 'door') {
+                const fMat = new THREE.MeshStandardMaterial({ color: 0x4a2a10 });
+                const fT = 0.15;
+                const fl = new THREE.Mesh(new THREE.BoxGeometry(fT, size[1], size[2]), fMat);
+                fl.position.x = -size[0]/2 + fT/2;
+                const fr = new THREE.Mesh(new THREE.BoxGeometry(fT, size[1], size[2]), fMat);
+                fr.position.x = size[0]/2 - fT/2;
+                const ft = new THREE.Mesh(new THREE.BoxGeometry(size[0], fT, size[2]), fMat);
+                ft.position.y = size[1]/2 - fT/2;
+                
+                const door = new THREE.Mesh(new THREE.BoxGeometry(size[0]-fT*2, size[1]-fT, size[2]*0.2), material);
+                door.position.y = -fT/2;
+                group.add(fl); group.add(fr); group.add(ft); group.add(door);
+            }
+            else if (type === 'window') {
+                const fMat = new THREE.MeshStandardMaterial({ color: 0xffffff });
+                const fT = 0.15;
+                const fl = new THREE.Mesh(new THREE.BoxGeometry(fT, size[1], size[2]), fMat);
+                fl.position.x = -size[0]/2 + fT/2;
+                const fr = new THREE.Mesh(new THREE.BoxGeometry(fT, size[1], size[2]), fMat);
+                fr.position.x = size[0]/2 - fT/2;
+                const ft = new THREE.Mesh(new THREE.BoxGeometry(size[0], fT, size[2]), fMat);
+                ft.position.y = size[1]/2 - fT/2;
+                const fb = new THREE.Mesh(new THREE.BoxGeometry(size[0], fT, size[2]), fMat);
+                fb.position.y = -size[1]/2 + fT/2;
+                
+                const glass = new THREE.Mesh(new THREE.BoxGeometry(size[0]-fT*2, size[1]-fT*2, size[2]*0.2), material);
+                group.add(fl); group.add(fr); group.add(ft); group.add(fb); group.add(glass);
+            }
+            else if (type === 'hvac') {
+                const geo = new THREE.BoxGeometry(size[0], size[1], size[2]);
+                const mesh = new THREE.Mesh(geo, material);
+                const edges = new THREE.LineSegments(new THREE.EdgesGeometry(geo), new THREE.LineBasicMaterial({ color: 0x555555 }));
+                group.add(mesh); group.add(edges);
+            }
+            else {
+                const mesh = new THREE.Mesh(new THREE.BoxGeometry(size[0], size[1], size[2]), material);
+                group.add(mesh);
+            }
+            
+            group.traverse(child => {
+                if (child.isMesh) {
+                    child.castShadow = true;
+                    child.receiveShadow = true;
+                }
+            });
+            return group;
         }
 
         function updatePreviewMesh(type) {
             scene.remove(rollOverMesh);
-            rollOverGeo = createGeometryForTool(type);
             rollOverMaterial.color.setHex(0x00ff00);
-            rollOverMesh = new THREE.Mesh(rollOverGeo, rollOverMaterial);
+            rollOverMesh = createMeshForTool(type, rollOverMaterial);
             rollOverMesh.rotation.y = GAME_STATE.currentRotation;
             scene.add(rollOverMesh);
         }
@@ -542,13 +927,15 @@
             return `${prefix}-${num}`;
         }
 
-        function checkClash(newBoxObj) {
-            const newType = BIM_LIBRARY[GAME_STATE.currentTool].type;
+        function checkClash(newBoxObj, ignoreObj = null) {
+            const newType = ignoreObj ? ignoreObj.bimData.type : BIM_LIBRARY[GAME_STATE.currentTool].type;
             const box1 = new THREE.Box3().setFromObject(newBoxObj);
-            box1.expandByScalar(-0.05); // Allow touching edges
+            box1.expandByScalar(-0.05); // Toleransi tepian
 
             for (let i = 0; i < GAME_STATE.placedObjects.length; i++) {
                 const existing = GAME_STATE.placedObjects[i];
+                if (existing === ignoreObj) continue; // Jangan bentrok dengan diri sendiri
+
                 const box2 = new THREE.Box3().setFromObject(existing.mesh);
                 box2.expandByScalar(-0.05);
 
@@ -556,7 +943,7 @@
                     if ((newType === 'mep' && existing.bimData.type === 'solid') || 
                         (newType === 'solid' && existing.bimData.type === 'mep') ||
                         (newType === 'solid' && existing.bimData.type === 'solid')) {
-                        logMessage(`🚨 CLASH DETECTED: Collides with ${existing.bimData.name} (${existing.bimData.id})`, 'error');
+                        logMessage(`🚨 CLASH: Bentrok dengan ${existing.bimData.name}`, 'error');
                         return true;
                     }
                 }
@@ -569,25 +956,23 @@
             const data = BIM_LIBRARY[tool];
 
             if (GAME_STATE.spent + data.cost > GAME_STATE.budget) {
-                logMessage(`❌ BUDGET OVERRUN: Cannot afford ${data.name} ($${data.cost})`, 'error');
+                logMessage(`❌ BUDGET OVERRUN: Dana tidak cukup untuk ${data.name}`, 'error');
                 return;
             }
 
-            // Snap logic based on rollover mesh's current calculated position
             if (checkClash(rollOverMesh)) {
                 rollOverMaterial.color.setHex(0xff0000);
                 setTimeout(() => rollOverMaterial.color.setHex(0x00ff00), 500);
                 return; 
             }
 
-            const geo = createGeometryForTool(tool);
             const mat = new THREE.MeshStandardMaterial({ 
                 color: data.color, 
                 transparent: data.transparent || false,
                 opacity: data.opacity || 1.0,
                 roughness: 0.7
             });
-            const mesh = new THREE.Mesh(geo, mat);
+            const mesh = createMeshForTool(tool, mat);
             
             mesh.position.copy(rollOverMesh.position);
             mesh.rotation.y = GAME_STATE.currentRotation;
@@ -599,6 +984,7 @@
                 mesh: mesh,
                 bimData: {
                     id: generateBimId(data.category),
+                    libKey: tool,
                     name: data.name,
                     category: data.category,
                     cost: data.cost,
@@ -615,12 +1001,15 @@
             GAME_STATE.elementsBuilt++;
             
             updateHUD();
-            logMessage(`✅ Placed: ${data.name} [${bimObj.bimData.id}]. Cost: $${data.cost}`);
+            logMessage(`✅ Terpasang: ${data.name} [${bimObj.bimData.id}]`);
             updateProgress();
+            
+            recordAction({ type: 'place', obj: bimObj });
         }
 
         function deleteObject(intersect) {
-            const objIndex = GAME_STATE.placedObjects.findIndex(obj => obj.mesh === intersect.object);
+            const rootObj = getRootMesh(intersect.object);
+            const objIndex = GAME_STATE.placedObjects.findIndex(obj => obj.mesh === rootObj);
             if (objIndex !== -1) {
                 const obj = GAME_STATE.placedObjects[objIndex];
                 GAME_STATE.spent -= obj.bimData.cost;
@@ -628,10 +1017,12 @@
                 GAME_STATE.placedObjects.splice(objIndex, 1);
                 GAME_STATE.elementsBuilt--;
                 
-                logMessage(`🗑️ Removed: ${obj.bimData.name} [${obj.bimData.id}]`, 'warning');
+                logMessage(`🗑️ Dihapus: ${obj.bimData.name} [${obj.bimData.id}]`, 'warning');
                 updateHUD();
                 updateProgress();
                 hideInspector();
+                
+                recordAction({ type: 'delete', obj: obj });
             }
         }
 
@@ -639,25 +1030,25 @@
             uiBudget.innerText = `$${GAME_STATE.spent.toLocaleString()} / $${GAME_STATE.budget.toLocaleString()}`;
             uiBudget.style.color = GAME_STATE.spent > GAME_STATE.budget * 0.8 ? 'var(--warning)' : 'var(--success)';
             
-            uiTime.innerText = `Day ${GAME_STATE.day} / ${GAME_STATE.maxDays}`;
+            uiTime.innerText = `Hari ${GAME_STATE.day} / ${GAME_STATE.maxDays}`;
             uiTime.style.color = GAME_STATE.day > GAME_STATE.maxDays ? 'var(--danger)' : 'var(--warning)';
             
-            if (GAME_STATE.elementsBuilt > 20) uiPhase.innerText = "Finishing / MEP";
-            else if (GAME_STATE.elementsBuilt > 5) uiPhase.innerText = "Superstructure";
-            else uiPhase.innerText = "Foundation";
+            if (GAME_STATE.elementsBuilt > 100) uiPhase.innerText = "Finishing / Kawasan";
+            else if (GAME_STATE.elementsBuilt > 20) uiPhase.innerText = "Struktur Atas";
+            else uiPhase.innerText = "Pondasi";
         }
 
         function updateProgress() {
             const pct = Math.min(100, Math.round((GAME_STATE.elementsBuilt / GAME_STATE.targetElements) * 100));
             document.getElementById('ui-progress-fill').style.width = `${pct}%`;
             document.getElementById('ui-progress-text').innerText = `${pct}%`;
-            if(pct === 100) logMessage(`🎉 Target Milestone Reached!`, 'success');
+            if(pct === 100) logMessage(`🎉 Target Milestone Kawasan Selesai!`, 'success');
         }
 
         function logMessage(msg, type = 'normal') {
             const div = document.createElement('div');
             div.className = `log-entry ${type === 'error' ? 'log-error' : (type === 'warning' ? 'text-yellow-400' : 'log-success')}`;
-            div.innerText = `[Day ${GAME_STATE.day}] ${msg}`;
+            div.innerText = `[Hari ${GAME_STATE.day}] ${msg}`;
             logContainer.appendChild(div);
             logContainer.scrollTop = logContainer.scrollHeight;
         }
@@ -670,7 +1061,7 @@
             document.getElementById('insp-id').innerText = bimData.id;
             document.getElementById('insp-cat').innerText = bimData.category.toUpperCase();
             document.getElementById('insp-cost').innerText = `$${bimData.cost.toLocaleString()}`;
-            document.getElementById('insp-time').innerText = `${bimData.time} Days`;
+            document.getElementById('insp-time').innerText = `${bimData.time} Hari`;
             document.getElementById('insp-vol').innerText = bimData.volume;
         }
 
@@ -679,9 +1070,28 @@
             inspectorData.classList.add('hidden');
         }
 
-        // Pointer Logic distinguishing drag vs click
+        // Pointer Logic
         let isPointerDragging = false;
         let pointerDownPos = { x: 0, y: 0 };
+
+        function getRootMesh(object) {
+            if (!object) return null;
+            if (object === plane || object === rollOverMesh || object === selectionBox) return object;
+            let current = object;
+            while(current.parent && current.parent.type === 'Group') {
+                current = current.parent;
+            }
+            return current;
+        }
+
+        function getGridSnap(val, size) {
+            // Toleransi ukuran kecil (MEP) bebas
+            if (size < 1) return Math.round(val * 2) / 2; 
+            // Ukuran genap (2, 4) pas di garis grid (bilangan bulat)
+            if (size % 2 === 0) return Math.round(val);
+            // Ukuran ganjil (1, 3) pas di tengah kotak grid (.5)
+            return Math.floor(val) + 0.5;
+        }
 
         function onPointerMoveHover(event) {
             const rect = container.getBoundingClientRect();
@@ -690,45 +1100,114 @@
 
             raycaster.setFromCamera(mouse, camera);
             const intersectables = GAME_STATE.placedObjects.map(obj => obj.mesh).concat([plane]);
-            const intersects = raycaster.intersectObjects(intersectables);
+            const intersects = raycaster.intersectObjects(intersectables, true);
 
             if (intersects.length > 0) {
                 const intersect = intersects[0];
 
-                if (!GAME_STATE.isDeleteMode) {
+                if (GAME_STATE.mode === 'build') {
                     const data = BIM_LIBRARY[GAME_STATE.currentTool];
-                    const voxel = new THREE.Vector3();
-                    voxel.copy(intersect.point).add(intersect.face.normal);
+                    const normal = intersect.face.normal;
+                    const p = intersect.point;
                     
-                    // Simple grid snapping
-                    voxel.x = Math.floor(voxel.x) + 0.5;
-                    voxel.z = Math.floor(voxel.z) + 0.5;
-                    // Y snapping depends on stacking
-                    voxel.y = Math.floor(voxel.y) + (data.size[1] / 2); 
+                    let w = data.size[0];
+                    let h = data.size[1];
+                    let d = data.size[2];
+                    if (Math.abs(Math.sin(GAME_STATE.currentRotation)) > 0.5) {
+                        w = data.size[2];
+                        d = data.size[0];
+                    }
+
+                    let cx, cy, cz;
+                    if (intersect.object !== plane) {
+                        // Jika menempel pada blok yang sudah ada, gunakan logika "Smart Flush" (Penjajaran Otomatis)
+                        const box = new THREE.Box3().setFromObject(intersect.object);
+                        const cCenter = new THREE.Vector3();
+                        box.getCenter(cCenter);
+                        
+                        // Deteksi ukuran asli blok yang diklik (pembulatan aman)
+                        const cW = Math.round((box.max.x - box.min.x) * 10) / 10;
+                        const cH = Math.round((box.max.y - box.min.y) * 10) / 10;
+                        const cD = Math.round((box.max.z - box.min.z) * 10) / 10;
+
+                        if (Math.abs(normal.y) > 0.5) {
+                            // Menempel di atas/bawah
+                            cy = normal.y > 0 ? box.max.y + h/2 : box.min.y - h/2;
+                            cx = (w === cW) ? cCenter.x : getGridSnap(p.x, w);
+                            cz = (d === cD) ? cCenter.z : getGridSnap(p.z, d);
+                        } else if (Math.abs(normal.x) > 0.5) {
+                            // Menempel di samping Kiri/Kanan
+                            cx = normal.x > 0 ? box.max.x + w/2 : box.min.x - w/2;
+                            cy = (h === cH) ? cCenter.y : (Math.round(p.y * 2) / 2 + h/2);
+                            cz = (d === cD) ? cCenter.z : getGridSnap(p.z, d);
+                        } else if (Math.abs(normal.z) > 0.5) {
+                            // Menempel di samping Depan/Belakang
+                            cz = normal.z > 0 ? box.max.z + d/2 : box.min.z - d/2;
+                            cx = (w === cW) ? cCenter.x : getGridSnap(p.x, w);
+                            cy = (h === cH) ? cCenter.y : (Math.round(p.y * 2) / 2 + h/2);
+                        }
+                    } else {
+                        // Jika diletakkan di tanah kosong, gunakan grid absolut
+                        cx = getGridSnap(p.x, w);
+                        cz = getGridSnap(p.z, d);
+                        cy = h/2; 
+                    }
                     
-                    rollOverMesh.position.copy(voxel);
-                    rollOverMesh.visible = true;
+                    rollOverMesh.position.set(cx, cy, cz);
 
                     if (intersect.object !== plane) {
-                        const hoveredObj = GAME_STATE.placedObjects.find(obj => obj.mesh === intersect.object);
+                        const rootObj = getRootMesh(intersect.object);
+                        const hoveredObj = GAME_STATE.placedObjects.find(obj => obj.mesh === rootObj);
                         if (hoveredObj) showInspector(hoveredObj.bimData);
                     } else {
                         hideInspector();
                     }
                 } else {
-                    rollOverMesh.visible = false;
+                    // Hover highlight for delete or select modes
                     if (intersect.object !== plane) {
-                        intersect.object.material.emissive.setHex(0xff0000);
-                        setTimeout(() => { if(intersect.object.material) intersect.object.material.emissive.setHex(0x000000) }, 100);
-                        const hoveredObj = GAME_STATE.placedObjects.find(obj => obj.mesh === intersect.object);
+                        const root = getRootMesh(intersect.object);
+                        root.traverse(child => {
+                            if (child.isMesh && child.material && child.material.emissive) {
+                                child.material.emissive.setHex(GAME_STATE.mode === 'delete' ? 0xff0000 : 0x5555ff);
+                            }
+                        });
+                        setTimeout(() => { 
+                            root.traverse(child => {
+                                if (child.isMesh && child.material && child.material.emissive) {
+                                    child.material.emissive.setHex(0x000000);
+                                }
+                            });
+                        }, 100);
+                        
+                        const hoveredObj = GAME_STATE.placedObjects.find(obj => obj.mesh === root);
                         if (hoveredObj) showInspector(hoveredObj.bimData);
                     }
                 }
-            } else {
-                rollOverMesh.visible = false;
-                hideInspector();
             }
         }
+
+        // Klik Ganda untuk Fokus Kamera (Zoom ke Titik)
+        container.addEventListener('dblclick', (e) => {
+            if (e.target.closest('.panel') || e.target.closest('button') || e.target.closest('#dpad-container')) return;
+            
+            raycaster.setFromCamera(mouse, camera);
+            const intersects = raycaster.intersectObjects([plane, ...GAME_STATE.placedObjects.map(o => o.mesh)], true);
+            
+            if (intersects.length > 0) {
+                const targetPoint = intersects[0].point;
+                const startTarget = controls.target.clone();
+                let progress = 0;
+                function animateFocus() {
+                    progress += 0.05;
+                    if (progress <= 1) {
+                        controls.target.lerpVectors(startTarget, targetPoint, progress);
+                        controls.update();
+                        requestAnimationFrame(animateFocus);
+                    }
+                }
+                animateFocus();
+            }
+        });
 
         container.addEventListener('pointerdown', (e) => {
             pointerDownPos = { x: e.clientX, y: e.clientY };
@@ -743,71 +1222,439 @@
         });
 
         container.addEventListener('pointerup', (e) => {
-            // If dragging, don't place object
             if (isPointerDragging) return;
-            // Only left click or touch
             if (e.button !== 0 && e.pointerType === 'mouse') return;
-            // Ignore if clicking UI
-            if (e.target.closest('.panel') || e.target.closest('button')) return;
+            if (e.target.closest('.panel') || e.target.closest('button') || e.target.closest('#dpad-container')) return;
 
             raycaster.setFromCamera(mouse, camera);
             const intersectables = GAME_STATE.placedObjects.map(obj => obj.mesh).concat([plane]);
-            const intersects = raycaster.intersectObjects(intersectables);
+            const intersects = raycaster.intersectObjects(intersectables, true);
 
             if (intersects.length > 0) {
-                if (GAME_STATE.isDeleteMode && intersects[0].object !== plane) {
+                const hitPlane = (intersects[0].object === plane);
+                
+                if (GAME_STATE.mode === 'delete' && !hitPlane) {
                     deleteObject(intersects[0]);
-                } else if (!GAME_STATE.isDeleteMode) {
+                } else if (GAME_STATE.mode === 'select') {
+                    if (!hitPlane) {
+                        selectObject(getRootMesh(intersects[0].object));
+                    } else {
+                        deselectObject();
+                    }
+                } else if (GAME_STATE.mode === 'build') {
                     placeObject(intersects[0]);
                 }
             }
         });
 
-        // Tool Selection
+        // Helper untuk mepet otomatis (Magnetic Snap) jika jarak dengan blok lain sudah sempit
+        function getMagneticSnap(obj, dir, normalStepVal) {
+            const box1 = new THREE.Box3().setFromObject(obj.mesh);
+            let bestSnapVal = null;
+            let minDistance = 1.5; // Jarak maksimal untuk menarik otomatis
+            
+            const eps = 0.05;
+
+            for (const existing of GAME_STATE.placedObjects) {
+                if (existing === obj) continue;
+                
+                const box2 = new THREE.Box3().setFromObject(existing.mesh);
+                
+                let alignX = (box1.max.x > box2.min.x + eps && box1.min.x < box2.max.x - eps);
+                let alignY = (box1.max.y > box2.min.y + eps && box1.min.y < box2.max.y - eps);
+                let alignZ = (box1.max.z > box2.min.z + eps && box1.min.z < box2.max.z - eps);
+                
+                let dist = Infinity;
+                let snapCenter = null;
+                const width1 = box1.max.x - box1.min.x;
+                const height1 = box1.max.y - box1.min.y;
+                const depth1 = box1.max.z - box1.min.z;
+
+                if (dir === 'x-plus' && alignY && alignZ && box2.min.x >= box1.max.x - eps) {
+                    dist = box2.min.x - box1.max.x;
+                    snapCenter = box2.min.x - width1/2;
+                } else if (dir === 'x-minus' && alignY && alignZ && box2.max.x <= box1.min.x + eps) {
+                    dist = box1.min.x - box2.max.x;
+                    snapCenter = box2.max.x + width1/2;
+                } else if (dir === 'z-plus' && alignX && alignY && box2.min.z >= box1.max.z - eps) {
+                    dist = box2.min.z - box1.max.z;
+                    snapCenter = box2.min.z - depth1/2;
+                } else if (dir === 'z-minus' && alignX && alignY && box2.max.z <= box1.min.z + eps) {
+                    dist = box1.min.z - box2.max.z;
+                    snapCenter = box2.max.z + depth1/2;
+                } else if (dir === 'y-plus' && alignX && alignZ && box2.min.y >= box1.max.y - eps) {
+                    dist = box2.min.y - box1.max.y;
+                    snapCenter = box2.min.y - height1/2;
+                } else if (dir === 'y-minus' && alignX && alignZ && box2.max.y <= box1.min.y + eps) {
+                    dist = box1.min.y - box2.max.y;
+                    snapCenter = box2.max.y + height1/2;
+                }
+
+                if (dist >= -eps && dist < minDistance) {
+                    minDistance = dist;
+                    bestSnapVal = snapCenter;
+                }
+            }
+            
+            return bestSnapVal !== null ? bestSnapVal : normalStepVal;
+        }
+
+        // D-Pad Nudge Logic
+        document.querySelectorAll('.btn-nudge').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                if (!GAME_STATE.selectedObj) return;
+                
+                const dir = btn.dataset.dir;
+                const obj = GAME_STATE.selectedObj;
+                
+                // Ambil ukuran asli objek untuk perhitungan snap
+                const data = BIM_LIBRARY[obj.bimData.libKey];
+                let w = data ? data.size[0] : 1;
+                let d = data ? data.size[2] : 1;
+                if (Math.abs(Math.sin(obj.mesh.rotation.y)) > 0.5) {
+                    w = data ? data.size[2] : 1;
+                    d = data ? data.size[0] : 1;
+                }
+                
+                const oldPos = obj.mesh.position.clone();
+                const oldRot = obj.mesh.rotation.y;
+                
+                // Jarak geser dihitung dinamis dengan grid snap agar tidak "genjlong"
+                const shift = 0.6; 
+                
+                let targetX = obj.mesh.position.x;
+                let targetY = obj.mesh.position.y;
+                let targetZ = obj.mesh.position.z;
+
+                if (dir === 'x-plus') targetX = getMagneticSnap(obj, dir, getGridSnap(oldPos.x + shift, w));
+                if (dir === 'x-minus') targetX = getMagneticSnap(obj, dir, getGridSnap(oldPos.x - shift, w));
+                if (dir === 'z-plus') targetZ = getMagneticSnap(obj, dir, getGridSnap(oldPos.z + shift, d));
+                if (dir === 'z-minus') targetZ = getMagneticSnap(obj, dir, getGridSnap(oldPos.z - shift, d));
+                if (dir === 'y-plus') targetY = getMagneticSnap(obj, dir, oldPos.y + 0.5);
+                if (dir === 'y-minus') targetY = getMagneticSnap(obj, dir, oldPos.y - 0.5);
+
+                obj.mesh.position.set(targetX, targetY, targetZ);
+                
+                if (btn.id === 'btn-nudge-rotate') {
+                    obj.mesh.rotation.y += Math.PI / 2;
+                }
+                
+                if (btn.id === 'btn-nudge-close') {
+                    deselectObject();
+                    return;
+                }
+
+                if (dir || btn.id === 'btn-nudge-rotate') {
+                    // Cek tabrakan (kecuali dengan dirinya sendiri)
+                    if (checkClash(obj.mesh, obj)) {
+                        // Batalkan pergerakan
+                        obj.mesh.position.copy(oldPos);
+                        obj.mesh.rotation.y = oldRot;
+                        selectionBox.material.color.setHex(0xff0000); // Merah sebentar
+                        setTimeout(() => { if(selectionBox.material) selectionBox.material.color.setHex(0xffff00); }, 300);
+                    } else {
+                        // Sukses geser
+                        selectionBox.setFromObject(obj.mesh);
+                        
+                        if (!oldPos.equals(obj.mesh.position) || oldRot !== obj.mesh.rotation.y) {
+                            recordAction({
+                                type: 'move',
+                                obj: obj,
+                                oldPos: oldPos.clone(),
+                                oldRot: oldRot,
+                                newPos: obj.mesh.position.clone(),
+                                newRot: obj.mesh.rotation.y
+                            });
+                        }
+                    }
+                }
+            });
+        });
+
+        // Tool & Mode Selection
         toolCards.forEach(card => {
             card.addEventListener('click', () => {
-                GAME_STATE.isDeleteMode = false;
-                btnDelete.classList.remove('bg-red-800', 'border', 'border-white');
-                
+                setMode('build');
                 toolCards.forEach(c => c.classList.remove('active'));
                 card.classList.add('active');
                 
                 GAME_STATE.currentTool = card.dataset.type;
                 updatePreviewMesh(GAME_STATE.currentTool);
-                rollOverMesh.visible = true;
             });
         });
 
-        // Rotation Logic
+        btnSelect.addEventListener('click', () => setMode('select'));
+        btnDelete.addEventListener('click', () => setMode('delete'));
+
         function rotateElement() {
             GAME_STATE.currentRotation += Math.PI / 2;
             rollOverMesh.rotation.y = GAME_STATE.currentRotation;
         }
         btnRotate.addEventListener('click', rotateElement);
-        window.addEventListener('keydown', (e) => {
-            if (e.key.toLowerCase() === 'r') rotateElement();
-            if (e.key.toLowerCase() === 'x') btnDelete.click();
-        });
+        btnUndo.addEventListener('click', undo);
+        btnRedo.addEventListener('click', redo);
 
-        // Delete Mode Toggle
-        btnDelete.addEventListener('click', () => {
-            GAME_STATE.isDeleteMode = !GAME_STATE.isDeleteMode;
-            if (GAME_STATE.isDeleteMode) {
-                toolCards.forEach(c => c.classList.remove('active'));
-                btnDelete.classList.add('bg-red-800', 'border', 'border-white');
-                rollOverMesh.visible = false;
-            } else {
-                btnDelete.classList.remove('bg-red-800', 'border', 'border-white');
-                toolCards[0].click();
+        window.addEventListener('keydown', (e) => {
+            // Abaikan input jika user sedang fokus ke input form atau UI lainnya
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
+            if (e.key.toLowerCase() === 'r') rotateElement();
+            if (e.key.toLowerCase() === 'x') setMode('delete');
+            if (e.key.toLowerCase() === 's') setMode('select');
+            
+            if (e.ctrlKey && e.key.toLowerCase() === 'z') {
+                e.preventDefault();
+                undo();
+            }
+            if (e.ctrlKey && e.key.toLowerCase() === 'y') {
+                e.preventDefault();
+                redo();
+            }
+        });
+        
+        function updateHistoryButtons() {
+            if (HISTORY_INDEX >= 0) { btnUndo.classList.remove('opacity-50', 'pointer-events-none'); }
+            else { btnUndo.classList.add('opacity-50', 'pointer-events-none'); }
+            
+            if (HISTORY_INDEX < HISTORY.length - 1) { btnRedo.classList.remove('opacity-50', 'pointer-events-none'); }
+            else { btnRedo.classList.add('opacity-50', 'pointer-events-none'); }
+        }
+
+        function saveState() {
+            if (!GAME_STATE.projectId) return;
+            try {
+                const serializedObjects = GAME_STATE.placedObjects.map(obj => ({
+                    libKey: obj.bimData.libKey,
+                    px: obj.mesh.position.x, py: obj.mesh.position.y, pz: obj.mesh.position.z,
+                    ry: obj.mesh.rotation.y, bimData: obj.bimData
+                }));
+                const data = {
+                    id: GAME_STATE.projectId, name: GAME_STATE.projectName,
+                    budget: GAME_STATE.budget, spent: GAME_STATE.spent,
+                    day: GAME_STATE.day, elementsBuilt: GAME_STATE.elementsBuilt,
+                    objects: serializedObjects, lastModified: Date.now()
+                };
+                
+                let allProjects = JSON.parse(localStorage.getItem('bim_projects') || '{}');
+                
+                if (localStorage.getItem('bim_simulator_save')) {
+                    const oldData = JSON.parse(localStorage.getItem('bim_simulator_save'));
+                    oldData.id = 'default_legacy';
+                    oldData.name = 'Proyek Sebelumnya';
+                    oldData.lastModified = Date.now();
+                    allProjects['default_legacy'] = oldData;
+                    localStorage.removeItem('bim_simulator_save');
+                }
+                
+                allProjects[GAME_STATE.projectId] = data;
+                localStorage.setItem('bim_projects', JSON.stringify(allProjects));
+            } catch (e) { console.error("Gagal save", e); }
+        }
+
+        function clearScene() {
+            GAME_STATE.placedObjects.forEach(obj => { scene.remove(obj.mesh); });
+            GAME_STATE.placedObjects = [];
+            HISTORY.length = 0;
+            HISTORY_INDEX = -1;
+            updateHistoryButtons();
+        }
+
+        function loadState(projectId) {
+            try {
+                let allProjects = JSON.parse(localStorage.getItem('bim_projects') || '{}');
+                const data = allProjects[projectId];
+                if (!data || !data.objects) return false;
+
+                clearScene();
+
+                GAME_STATE.projectId = data.id;
+                GAME_STATE.projectName = data.name || 'Proyek';
+                GAME_STATE.budget = data.budget || 5000000;
+                GAME_STATE.spent = data.spent || 0;
+                GAME_STATE.day = data.day || 1;
+                GAME_STATE.elementsBuilt = data.elementsBuilt || 0;
+                
+                data.objects.forEach(savedObj => {
+                    const libData = BIM_LIBRARY[savedObj.libKey];
+                    if (libData) {
+                        let material;
+                        if (libData.transparent) {
+                            material = new THREE.MeshLambertMaterial({ color: libData.color, transparent: true, opacity: libData.opacity });
+                        } else if (libData.type === 'mep') {
+                            material = new THREE.MeshPhongMaterial({ color: libData.color, shininess: 100 });
+                        } else {
+                            material = new THREE.MeshLambertMaterial({ color: libData.color });
+                        }
+                        const mesh = createMeshForTool(savedObj.libKey, material);
+                        mesh.position.set(savedObj.px, savedObj.py, savedObj.pz);
+                        mesh.rotation.y = savedObj.ry;
+                        mesh.castShadow = true; mesh.receiveShadow = true;
+                        scene.add(mesh);
+                        
+                        GAME_STATE.placedObjects.push({ mesh: mesh, bimData: savedObj.bimData });
+                    }
+                });
+                
+                updateHUD(); updateProgress();
+                logMessage(`💾 Proyek "${GAME_STATE.projectName}" berhasil dimuat.`, 'success');
+                return true;
+            } catch (e) { console.error("Gagal load", e); return false; }
+        }
+
+        function deleteProject(projectId, event) {
+            event.stopPropagation();
+            if(confirm("Apakah Anda yakin ingin menghapus proyek ini?")) {
+                let allProjects = JSON.parse(localStorage.getItem('bim_projects') || '{}');
+                delete allProjects[projectId];
+                localStorage.setItem('bim_projects', JSON.stringify(allProjects));
+                renderProjectList();
+            }
+        }
+
+        function renderProjectList() {
+            const container = document.getElementById('project-list');
+            let allProjects = JSON.parse(localStorage.getItem('bim_projects') || '{}');
+            
+            if (localStorage.getItem('bim_simulator_save')) {
+                const oldData = JSON.parse(localStorage.getItem('bim_simulator_save'));
+                oldData.id = 'default_legacy';
+                oldData.name = 'Proyek Sebelumnya';
+                oldData.lastModified = Date.now();
+                allProjects['default_legacy'] = oldData;
+                localStorage.removeItem('bim_simulator_save');
+                localStorage.setItem('bim_projects', JSON.stringify(allProjects));
+            }
+            
+            const projects = Object.values(allProjects).sort((a,b) => b.lastModified - a.lastModified);
+            
+            if (projects.length === 0) {
+                container.innerHTML = '<div class="text-sm text-gray-500 italic text-center p-4 bg-gray-900 rounded">Belum ada proyek tersimpan.</div>';
+                return;
+            }
+            
+            container.innerHTML = '';
+            projects.forEach(p => {
+                const date = new Date(p.lastModified).toLocaleString('id-ID', {day: 'numeric', month: 'short', hour: '2-digit', minute:'2-digit'});
+                const btn = document.createElement('div');
+                btn.className = 'w-full flex justify-between items-center bg-gray-700 hover:bg-gray-600 p-3 rounded transition cursor-pointer group';
+                btn.innerHTML = `
+                    <div class="flex-grow">
+                        <div class="font-bold text-white text-sm">${p.name}</div>
+                        <div class="text-[10px] text-gray-400"><i class="fas fa-cubes text-blue-400"></i> ${p.elementsBuilt} Elemen &nbsp;|&nbsp; <i class="fas fa-clock text-gray-500"></i> ${date}</div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button class="btn-delete-proj bg-red-600 hover:bg-red-500 w-8 h-8 rounded text-white opacity-0 group-hover:opacity-100 transition" title="Hapus"><i class="fas fa-trash"></i></button>
+                        <div class="bg-blue-600 w-8 h-8 rounded text-white flex items-center justify-center"><i class="fas fa-play"></i></div>
+                    </div>
+                `;
+                btn.onclick = () => {
+                    loadState(p.id);
+                    document.getElementById('start-screen').style.display = 'none';
+                };
+                btn.querySelector('.btn-delete-proj').onclick = (e) => deleteProject(p.id, e);
+                container.appendChild(btn);
+            });
+        }
+
+        function recordAction(action) {
+            if (HISTORY_INDEX < HISTORY.length - 1) HISTORY.splice(HISTORY_INDEX + 1);
+            HISTORY.push(action);
+            HISTORY_INDEX++;
+            updateHistoryButtons();
+            saveState();
+        }
+
+        function undo() {
+            if (HISTORY_INDEX < 0) return;
+            const action = HISTORY[HISTORY_INDEX];
+            
+            if (action.type === 'place') {
+                scene.remove(action.obj.mesh);
+                const idx = GAME_STATE.placedObjects.indexOf(action.obj);
+                if (idx > -1) GAME_STATE.placedObjects.splice(idx, 1);
+                GAME_STATE.spent -= action.obj.bimData.cost;
+                GAME_STATE.day -= action.obj.bimData.time;
+                GAME_STATE.elementsBuilt--;
+            } else if (action.type === 'delete') {
+                scene.add(action.obj.mesh);
+                GAME_STATE.placedObjects.push(action.obj);
+                GAME_STATE.spent += action.obj.bimData.cost;
+                GAME_STATE.day += action.obj.bimData.time;
+                GAME_STATE.elementsBuilt++;
+            } else if (action.type === 'move') {
+                action.obj.mesh.position.copy(action.oldPos);
+                action.obj.mesh.rotation.y = action.oldRot;
+                if (GAME_STATE.selectedObj === action.obj) selectionBox.setFromObject(action.obj.mesh);
+            }
+            
+            updateHUD(); updateProgress(); hideInspector();
+            HISTORY_INDEX--; updateHistoryButtons();
+            logMessage('⏪ Undo (Ctrl+Z) berhasil', 'warning');
+            saveState();
+        }
+
+        function redo() {
+            if (HISTORY_INDEX >= HISTORY.length - 1) return;
+            HISTORY_INDEX++;
+            const action = HISTORY[HISTORY_INDEX];
+            
+            if (action.type === 'place') {
+                scene.add(action.obj.mesh);
+                GAME_STATE.placedObjects.push(action.obj);
+                GAME_STATE.spent += action.obj.bimData.cost;
+                GAME_STATE.day += action.obj.bimData.time;
+                GAME_STATE.elementsBuilt++;
+            } else if (action.type === 'delete') {
+                scene.remove(action.obj.mesh);
+                const idx = GAME_STATE.placedObjects.indexOf(action.obj);
+                if (idx > -1) GAME_STATE.placedObjects.splice(idx, 1);
+                GAME_STATE.spent -= action.obj.bimData.cost;
+                GAME_STATE.day -= action.obj.bimData.time;
+                GAME_STATE.elementsBuilt--;
+            } else if (action.type === 'move') {
+                action.obj.mesh.position.copy(action.newPos);
+                action.obj.mesh.rotation.y = action.newRot;
+                if (GAME_STATE.selectedObj === action.obj) selectionBox.setFromObject(action.obj.mesh);
+            }
+            
+            updateHUD(); updateProgress(); hideInspector();
+            updateHistoryButtons();
+            logMessage('⏩ Redo (Ctrl+Y) berhasil', 'warning');
+            saveState();
+        }
+
+        // Render Start Screen
+        renderProjectList();
+
+        // Start New Game
+        document.getElementById('btn-new-project').addEventListener('click', () => {
+            const name = prompt("Masukkan nama proyek baru:", "Proyek BIM " + Math.floor(Math.random()*1000));
+            if (name) {
+                clearScene();
+                GAME_STATE.projectId = 'proj_' + Date.now();
+                GAME_STATE.projectName = name;
+                GAME_STATE.budget = 5000000;
+                GAME_STATE.spent = 0;
+                GAME_STATE.day = 1;
+                GAME_STATE.elementsBuilt = 0;
+                updateHUD();
+                updateProgress();
+                saveState();
+                
+                document.getElementById('start-screen').style.display = 'none';
+                logMessage(`🚀 Proyek baru "${name}" dimulai.`, 'success');
             }
         });
 
-        // Start Game
-        document.getElementById('btn-start').addEventListener('click', () => {
-            document.getElementById('start-screen').style.display = 'none';
+        // Simpan & Keluar ke Dasbor
+        document.getElementById('btn-save-exit').addEventListener('click', () => {
+            saveState(); // Simpan state terbaru
+            deselectObject(); // Matikan mode edit
+            setMode('build'); // Reset alat
+            document.getElementById('start-screen').style.display = 'flex'; // Munculkan layar awal
+            renderProjectList(); // Refresh daftar proyek
         });
 
-        // Window Resize
         window.addEventListener('resize', () => {
             camera.aspect = container.clientWidth / container.clientHeight;
             camera.updateProjectionMatrix();
@@ -819,10 +1666,16 @@
         // Animation Loop
         function animate() {
             requestAnimationFrame(animate);
-            controls.update(); // Required for damping
+            controls.update(); 
             
-            if (rollOverMesh.visible && !GAME_STATE.isDeleteMode) {
+            if (GAME_STATE.mode === 'build' && rollOverMesh.visible) {
                 rollOverMaterial.opacity = 0.4 + Math.sin(Date.now() * 0.005) * 0.2;
+            }
+            
+            // Animasi efek berdenyut untuk kotak seleksi D-Pad
+            if (GAME_STATE.selectedObj && selectionBox.visible) {
+                selectionBox.material.opacity = 0.5 + Math.sin(Date.now() * 0.01) * 0.5;
+                selectionBox.material.transparent = true;
             }
 
             renderer.render(scene, camera);
