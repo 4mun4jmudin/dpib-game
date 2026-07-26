@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -50,10 +51,10 @@
             position: absolute;
             background: rgba(31, 41, 55, 0.95);
             backdrop-filter: blur(10px);
-            border: 1px solid rgba(255,255,255,0.1);
+            border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 12px;
             padding: 16px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
             z-index: 10;
         }
 
@@ -71,13 +72,20 @@
         .hud-stat {
             text-align: center;
         }
+
         .hud-stat-value {
             font-size: 1.25rem;
             font-weight: bold;
             font-family: monospace;
         }
-        .stat-budget { color: var(--success); }
-        .stat-time { color: var(--warning); }
+
+        .stat-budget {
+            color: var(--success);
+        }
+
+        .stat-time {
+            color: var(--warning);
+        }
 
         /* Left Panel - Tools */
         #panel-tools {
@@ -90,7 +98,7 @@
             gap: 12px;
             transition: left 0.3s ease-in-out;
         }
-        
+
         #panel-tools.hidden-panel {
             left: -340px;
         }
@@ -104,15 +112,16 @@
             height: 40px;
             background: rgba(31, 41, 55, 0.95);
             backdrop-filter: blur(10px);
-            border: 1px solid rgba(255,255,255,0.1);
+            border: 1px solid rgba(255, 255, 255, 0.1);
             border-left: none;
             border-radius: 0 8px 8px 0;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            box-shadow: 5px 0 15px rgba(0,0,0,0.3);
+            box-shadow: 5px 0 15px rgba(0, 0, 0, 0.3);
         }
+
         #btn-toggle-tools:hover {
             background: rgba(55, 65, 81, 0.95);
         }
@@ -125,18 +134,27 @@
             height: 40px;
             background: rgba(31, 41, 55, 0.95);
             backdrop-filter: blur(10px);
-            border: 1px solid rgba(255,255,255,0.1);
+            border: 1px solid rgba(255, 255, 255, 0.1);
             border-right: none;
             border-radius: 8px 0 0 8px;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            box-shadow: -5px 0 15px rgba(0,0,0,0.3);
+            box-shadow: -5px 0 15px rgba(0, 0, 0, 0.3);
         }
-        #btn-toggle-info:hover { background: rgba(55, 65, 81, 0.95); }
-        #panel-info { transition: right 0.3s ease-in-out; }
-        #panel-info.hidden-info { right: -320px !important; }
+
+        #btn-toggle-info:hover {
+            background: rgba(55, 65, 81, 0.95);
+        }
+
+        #panel-info {
+            transition: right 0.3s ease-in-out;
+        }
+
+        #panel-info.hidden-info {
+            right: -320px !important;
+        }
 
         #tools-scroll {
             overflow-y: auto;
@@ -148,10 +166,23 @@
         }
 
         /* Custom Scrollbar */
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); border-radius: 4px; }
-        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.4); }
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.4);
+        }
 
         /* Right Panel - Info */
         #panel-info {
@@ -167,7 +198,7 @@
         /* Tool Cards */
         .tool-card {
             background: rgba(17, 24, 39, 0.8);
-            border: 1px solid rgba(255,255,255,0.05);
+            border: 1px solid rgba(255, 255, 255, 0.05);
             border-radius: 8px;
             padding: 10px;
             cursor: pointer;
@@ -176,14 +207,17 @@
             align-items: center;
             gap: 12px;
         }
-        .tool-card:hover, .tool-card.active {
+
+        .tool-card:hover,
+        .tool-card.active {
             background: rgba(37, 99, 235, 0.2);
             border-color: var(--primary);
         }
+
         .tool-icon {
             width: 40px;
             height: 40px;
-            background: rgba(0,0,0,0.3);
+            background: rgba(0, 0, 0, 0.3);
             border-radius: 6px;
             display: flex;
             align-items: center;
@@ -208,12 +242,30 @@
             gap: 8px;
             width: 100%;
         }
-        .btn:active { transform: scale(0.98); }
-        .btn:hover { background: var(--primary-dark); }
-        .btn-danger { background: var(--danger); }
-        .btn-danger:hover { background: #b91c1c; }
-        .btn-secondary { background: #4b5563; }
-        .btn-secondary:hover { background: #374151; }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        .btn:hover {
+            background: var(--primary-dark);
+        }
+
+        .btn-danger {
+            background: var(--danger);
+        }
+
+        .btn-danger:hover {
+            background: #b91c1c;
+        }
+
+        .btn-secondary {
+            background: #4b5563;
+        }
+
+        .btn-secondary:hover {
+            background: #374151;
+        }
 
         /* D-Pad Styles */
         .btn-nudge {
@@ -223,7 +275,10 @@
             color: white;
             transition: transform 0.1s;
         }
-        .btn-nudge:active { transform: scale(0.9); }
+
+        .btn-nudge:active {
+            transform: scale(0.9);
+        }
 
         /* Logs */
         #log-container {
@@ -235,9 +290,20 @@
             font-family: monospace;
             font-size: 0.85rem;
         }
-        .log-entry { margin-bottom: 4px; padding-bottom: 4px; border-bottom: 1px solid #374151; }
-        .log-error { color: #ef4444; }
-        .log-success { color: #10b981; }
+
+        .log-entry {
+            margin-bottom: 4px;
+            padding-bottom: 4px;
+            border-bottom: 1px solid #374151;
+        }
+
+        .log-error {
+            color: #ef4444;
+        }
+
+        .log-success {
+            color: #10b981;
+        }
 
         /* Start Screen */
         #start-screen {
@@ -261,6 +327,7 @@
             overflow: hidden;
             margin-top: 4px;
         }
+
         .progress-bar-fill {
             height: 100%;
             background: var(--primary);
@@ -281,85 +348,170 @@
             text-align: center;
             padding: 20px;
         }
+
         #portrait-overlay i {
             font-size: 4rem;
             margin-bottom: 20px;
             animation: rotatePhone 2s infinite ease-in-out;
             color: var(--primary);
         }
+
         @keyframes rotatePhone {
-            0% { transform: rotate(0deg); }
-            50% { transform: rotate(-90deg); }
-            100% { transform: rotate(-90deg); }
+            0% {
+                transform: rotate(0deg);
+            }
+
+            50% {
+                transform: rotate(-90deg);
+            }
+
+            100% {
+                transform: rotate(-90deg);
+            }
         }
 
         /* Mobile Adjustments */
-        @media (max-width: 932px) and (orientation: landscape), (max-width: 768px) {
-            #panel-tools { width: 220px; z-index: 40; top: 50px; bottom: 5px; left: 5px; }
-            #panel-tools.hidden-panel { left: -240px; }
-            #panel-info { width: 220px; top: 50px; bottom: 5px; right: 5px; height: auto; z-index: 40; }
-            #panel-info.hidden-info { right: -240px !important; }
-            
-            #hud-top { 
-                width: auto; 
-                max-width: 95%; 
-                top: 5px; 
-                padding: 4px 8px !important; 
-                gap: 8px !important; 
+        @media (max-width: 932px) and (orientation: landscape),
+        (max-width: 768px) {
+            #panel-tools {
+                width: 220px;
+                z-index: 40;
+                top: 50px;
+                bottom: 5px;
+                left: 5px;
             }
-            .panel { padding: 6px; }
-            
-            .hud-stat-value { font-size: 0.8rem; white-space: nowrap; }
-            .hud-stat > .text-\[10px\] { display: none !important; }
-            
-            .tool-card { padding: 6px; gap: 6px; }
-            .tool-icon { width: 28px; height: 28px; font-size: 0.9rem; }
-            #btn-toggle-tools { width: 32px; height: 32px; right: -32px; }
-            #btn-toggle-info { width: 32px; height: 32px; left: -32px; }
-            
-            #btn-undo, #btn-redo { width: 32px !important; height: 32px !important; font-size: 0.8rem; }
-            #btn-save-exit span { display: none !important; }
-            #btn-save-exit { padding: 6px 10px !important; font-size: 1rem !important; }
-            #hud-top > div.flex { padding-right: 0.5rem !important; }
+
+            #panel-tools.hidden-panel {
+                left: -240px;
+            }
+
+            #panel-info {
+                width: 220px;
+                top: 50px;
+                bottom: 5px;
+                right: 5px;
+                height: auto;
+                z-index: 40;
+            }
+
+            #panel-info.hidden-info {
+                right: -240px !important;
+            }
+
+            #hud-top {
+                width: auto;
+                max-width: 95%;
+                top: 5px;
+                padding: 4px 8px !important;
+                gap: 8px !important;
+            }
+
+            .panel {
+                padding: 6px;
+            }
+
+            .hud-stat-value {
+                font-size: 0.8rem;
+                white-space: nowrap;
+            }
+
+            .hud-stat>.text-\[10px\] {
+                display: none !important;
+            }
+
+            .tool-card {
+                padding: 6px;
+                gap: 6px;
+            }
+
+            .tool-icon {
+                width: 28px;
+                height: 28px;
+                font-size: 0.9rem;
+            }
+
+            #btn-toggle-tools {
+                width: 32px;
+                height: 32px;
+                right: -32px;
+            }
+
+            #btn-toggle-info {
+                width: 32px;
+                height: 32px;
+                left: -32px;
+            }
+
+            #btn-undo,
+            #btn-redo {
+                width: 32px !important;
+                height: 32px !important;
+                font-size: 0.8rem;
+            }
+
+            #btn-save-exit span {
+                display: none !important;
+            }
+
+            #btn-save-exit {
+                padding: 6px 10px !important;
+                font-size: 1rem !important;
+            }
+
+            #hud-top>div.flex {
+                padding-right: 0.5rem !important;
+            }
         }
 
         @media (max-width: 768px) and (orientation: portrait) {
-            #portrait-overlay { display: flex; }
+            #portrait-overlay {
+                display: flex;
+            }
         }
     </style>
 </head>
+
 <body>
 
     <!-- Portrait Mode Overlay -->
     <div id="portrait-overlay">
         <i class="fas fa-mobile-alt"></i>
         <h2 class="text-2xl font-bold mb-3">Putar Perangkat Anda</h2>
-        <p class="text-gray-400 max-w-sm">Aplikasi BIM Builder Pro dirancang untuk layar lanskap (Landscape) agar area kanvas 3D terlihat lebih luas dan kontrol lebih nyaman.</p>
+        <p class="text-gray-400 max-w-sm">Aplikasi BIM Builder Pro dirancang untuk layar lanskap (Landscape) agar area
+            kanvas 3D terlihat lebih luas dan kontrol lebih nyaman.</p>
     </div>
 
     <div id="game-container">
-        
+
         <!-- UI: Top HUD -->
         <div id="hud-top" class="panel !flex-row items-center !gap-2 md:!gap-6">
             <div class="flex gap-2 pr-2 md:pr-4 border-r border-gray-600">
-                <button id="btn-undo" class="w-10 h-10 rounded-full bg-gray-800 border border-gray-600 text-gray-400 hover:text-white hover:bg-gray-700 transition opacity-50 pointer-events-none flex items-center justify-center shadow-lg" title="Undo (Ctrl+Z)"><i class="fas fa-undo"></i></button>
-                <button id="btn-redo" class="w-10 h-10 rounded-full bg-gray-800 border border-gray-600 text-gray-400 hover:text-white hover:bg-gray-700 transition opacity-50 pointer-events-none flex items-center justify-center shadow-lg" title="Redo (Ctrl+Y)"><i class="fas fa-redo"></i></button>
+                <button id="btn-undo"
+                    class="w-10 h-10 rounded-full bg-gray-800 border border-gray-600 text-gray-400 hover:text-white hover:bg-gray-700 transition opacity-50 pointer-events-none flex items-center justify-center shadow-lg"
+                    title="Undo (Ctrl+Z)"><i class="fas fa-undo"></i></button>
+                <button id="btn-redo"
+                    class="w-10 h-10 rounded-full bg-gray-800 border border-gray-600 text-gray-400 hover:text-white hover:bg-gray-700 transition opacity-50 pointer-events-none flex items-center justify-center shadow-lg"
+                    title="Redo (Ctrl+Y)"><i class="fas fa-redo"></i></button>
             </div>
-            
+
             <div class="hud-stat hidden md:block">
-                <div class="text-[10px] text-gray-400 uppercase tracking-wider"><i class="fas fa-flag mr-1"></i>Fase Proyek</div>
+                <div class="text-[10px] text-gray-400 uppercase tracking-wider"><i class="fas fa-flag mr-1"></i>Fase
+                    Proyek</div>
                 <div id="ui-phase" class="hud-stat-value text-blue-400">Pondasi</div>
             </div>
             <div class="hud-stat">
-                <div class="text-[10px] text-gray-400 uppercase tracking-wider"><i class="fas fa-dollar-sign mr-1"></i>Anggaran (5D)</div>
+                <div class="text-[10px] text-gray-400 uppercase tracking-wider"><i
+                        class="fas fa-dollar-sign mr-1"></i>Anggaran (5D)</div>
                 <div id="ui-budget" class="hud-stat-value stat-budget">$5,000,000</div>
             </div>
             <div class="hud-stat">
-                <div class="text-[10px] text-gray-400 uppercase tracking-wider"><i class="fas fa-calendar-alt mr-1"></i>Waktu (4D)</div>
+                <div class="text-[10px] text-gray-400 uppercase tracking-wider"><i
+                        class="fas fa-calendar-alt mr-1"></i>Waktu (4D)</div>
                 <div id="ui-time" class="hud-stat-value stat-time">Hari 1 / 365</div>
             </div>
-            
-            <button id="btn-save-exit" class="ml-auto flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-3 py-2 md:px-4 md:py-2 rounded-lg shadow-lg transition transform hover:scale-105 text-xs md:text-sm font-bold border border-red-500">
+
+            <button id="btn-save-exit"
+                class="ml-auto flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-3 py-2 md:px-4 md:py-2 rounded-lg shadow-lg transition transform hover:scale-105 text-xs md:text-sm font-bold border border-red-500">
                 <i class="fas fa-sign-out-alt"></i> <span class="hidden md:inline">Keluar</span>
             </button>
         </div>
@@ -372,11 +524,11 @@
             <h2 class="text-lg font-bold flex items-center gap-2 border-b border-gray-600 pb-2">
                 <i class="fas fa-cubes text-blue-400"></i> Pustaka BIM
             </h2>
-            
+
             <div id="tools-scroll">
                 <!-- Structure -->
                 <div class="text-xs font-bold mt-2 text-gray-400 uppercase">Struktur</div>
-                
+
                 <div class="tool-card active" data-type="foundation">
                     <div class="tool-icon text-gray-400"><i class="fas fa-square-full"></i></div>
                     <div class="flex-grow">
@@ -392,7 +544,7 @@
                         <div class="text-[10px] text-gray-400">Biaya: $500 | Waktu: 1hr</div>
                     </div>
                 </div>
-                
+
                 <div class="tool-card" data-type="beam">
                     <div class="tool-icon text-gray-400"><i class="fas fa-minus"></i></div>
                     <div class="flex-grow">
@@ -408,7 +560,7 @@
                         <div class="text-[10px] text-gray-400">Biaya: $1,500 | Waktu: 2hr</div>
                     </div>
                 </div>
-                
+
                 <div class="tool-card" data-type="stair">
                     <div class="tool-icon text-gray-500"><i class="fas fa-stream"></i></div>
                     <div class="flex-grow">
@@ -416,7 +568,7 @@
                         <div class="text-[10px] text-gray-400">Biaya: $2,000 | Waktu: 3hr</div>
                     </div>
                 </div>
-                
+
                 <div class="tool-card" data-type="roof">
                     <div class="tool-icon text-gray-600"><i class="fas fa-caret-up"></i></div>
                     <div class="flex-grow">
@@ -442,7 +594,7 @@
                         <div class="text-[10px] text-gray-400">Biaya: $2,500 | Waktu: 1hr</div>
                     </div>
                 </div>
-                
+
                 <div class="tool-card" data-type="door">
                     <div class="tool-icon text-amber-600"><i class="fas fa-door-closed"></i></div>
                     <div class="flex-grow">
@@ -450,7 +602,7 @@
                         <div class="text-[10px] text-gray-400">Biaya: $400 | Waktu: 1hr</div>
                     </div>
                 </div>
-                
+
                 <div class="tool-card" data-type="window">
                     <div class="tool-icon text-blue-200"><i class="fas fa-window-maximize"></i></div>
                     <div class="flex-grow">
@@ -498,18 +650,26 @@
             <h2 class="text-lg font-bold mb-2 flex items-center gap-2 border-b border-gray-600 pb-2">
                 <i class="fas fa-search text-green-400"></i> Inspektur BIM
             </h2>
-            
-            <div id="inspector-data" class="bg-gray-800 p-3 rounded mb-2 text-xs hidden shadow-inner border border-gray-700">
-                <div class="font-bold text-blue-300 border-b border-gray-600 pb-1 mb-2" id="insp-title">Nama Elemen</div>
+
+            <div id="inspector-data"
+                class="bg-gray-800 p-3 rounded mb-2 text-xs hidden shadow-inner border border-gray-700">
+                <div class="font-bold text-blue-300 border-b border-gray-600 pb-1 mb-2" id="insp-title">Nama Elemen
+                </div>
                 <div class="grid grid-cols-2 gap-y-1 gap-x-2">
-                    <div class="text-gray-400">ID:</div><div id="insp-id" class="text-right font-mono">---</div>
-                    <div class="text-gray-400">Kategori:</div><div id="insp-cat" class="text-right">---</div>
-                    <div class="text-gray-400">Biaya:</div><div id="insp-cost" class="text-right text-green-400 font-bold">---</div>
-                    <div class="text-gray-400">Waktu (4D):</div><div id="insp-time" class="text-right text-yellow-400">---</div>
-                    <div class="text-gray-400">Volume:</div><div id="insp-vol" class="text-right">---</div>
+                    <div class="text-gray-400">ID:</div>
+                    <div id="insp-id" class="text-right font-mono">---</div>
+                    <div class="text-gray-400">Kategori:</div>
+                    <div id="insp-cat" class="text-right">---</div>
+                    <div class="text-gray-400">Biaya:</div>
+                    <div id="insp-cost" class="text-right text-green-400 font-bold">---</div>
+                    <div class="text-gray-400">Waktu (4D):</div>
+                    <div id="insp-time" class="text-right text-yellow-400">---</div>
+                    <div class="text-gray-400">Volume:</div>
+                    <div id="insp-vol" class="text-right">---</div>
                 </div>
             </div>
-            <div id="inspector-empty" class="text-xs text-gray-400 italic mb-2 p-3 bg-gray-800 rounded border border-gray-700">
+            <div id="inspector-empty"
+                class="text-xs text-gray-400 italic mb-2 p-3 bg-gray-800 rounded border border-gray-700">
                 Arahkan kursor ke elemen untuk melihat data BIM 5D.
             </div>
 
@@ -530,31 +690,40 @@
         </div>
 
         <!-- D-Pad (Geser Posisi) -->
-        <div id="dpad-container" class="hidden absolute bottom-10 left-1/2 transform -translate-x-1/2 bg-gray-900/95 p-3 md:p-4 rounded-xl border border-gray-600 shadow-[0_10px_40px_rgba(0,0,0,0.8)] z-50 flex gap-4 md:gap-6 backdrop-blur-md">
+        <div id="dpad-container"
+            class="hidden absolute bottom-10 left-1/2 transform -translate-x-1/2 bg-gray-900/95 p-3 md:p-4 rounded-xl border border-gray-600 shadow-[0_10px_40px_rgba(0,0,0,0.8)] z-50 flex gap-4 md:gap-6 backdrop-blur-md">
             <!-- X/Z Controls -->
             <div class="grid grid-cols-3 gap-1 md:gap-2">
                 <div></div>
-                <button class="btn-nudge bg-gray-700 hover:bg-gray-600 p-2 md:p-3 rounded" data-dir="z-minus" title="Mundur (Z-)"><i class="fas fa-arrow-up"></i></button>
+                <button class="btn-nudge bg-gray-700 hover:bg-gray-600 p-2 md:p-3 rounded" data-dir="z-minus"
+                    title="Mundur (Z-)"><i class="fas fa-arrow-up"></i></button>
                 <div></div>
-                <button class="btn-nudge bg-gray-700 hover:bg-gray-600 p-2 md:p-3 rounded" data-dir="x-minus" title="Kiri (X-)"><i class="fas fa-arrow-left"></i></button>
+                <button class="btn-nudge bg-gray-700 hover:bg-gray-600 p-2 md:p-3 rounded" data-dir="x-minus"
+                    title="Kiri (X-)"><i class="fas fa-arrow-left"></i></button>
                 <div class="flex items-center justify-center text-[10px] md:text-xs text-gray-400 font-bold">GESER</div>
-                <button class="btn-nudge bg-gray-700 hover:bg-gray-600 p-2 md:p-3 rounded" data-dir="x-plus" title="Kanan (X+)"><i class="fas fa-arrow-right"></i></button>
+                <button class="btn-nudge bg-gray-700 hover:bg-gray-600 p-2 md:p-3 rounded" data-dir="x-plus"
+                    title="Kanan (X+)"><i class="fas fa-arrow-right"></i></button>
                 <div></div>
-                <button class="btn-nudge bg-gray-700 hover:bg-gray-600 p-2 md:p-3 rounded" data-dir="z-plus" title="Maju (Z+)"><i class="fas fa-arrow-down"></i></button>
+                <button class="btn-nudge bg-gray-700 hover:bg-gray-600 p-2 md:p-3 rounded" data-dir="z-plus"
+                    title="Maju (Z+)"><i class="fas fa-arrow-down"></i></button>
                 <div></div>
             </div>
-            
+
             <!-- Y Controls -->
             <div class="flex flex-col justify-between gap-1 md:gap-2 border-l border-gray-600 pl-4 md:pl-6">
-                <button class="btn-nudge bg-blue-700 hover:bg-blue-600 p-2 md:p-3 rounded" data-dir="y-plus" title="Naik (Y+)"><i class="fas fa-chevron-up"></i></button>
+                <button class="btn-nudge bg-blue-700 hover:bg-blue-600 p-2 md:p-3 rounded" data-dir="y-plus"
+                    title="Naik (Y+)"><i class="fas fa-chevron-up"></i></button>
                 <div class="text-center text-[10px] text-gray-400 font-bold leading-none">TINGGI</div>
-                <button class="btn-nudge bg-blue-700 hover:bg-blue-600 p-2 md:p-3 rounded" data-dir="y-minus" title="Turun (Y-)"><i class="fas fa-chevron-down"></i></button>
+                <button class="btn-nudge bg-blue-700 hover:bg-blue-600 p-2 md:p-3 rounded" data-dir="y-minus"
+                    title="Turun (Y-)"><i class="fas fa-chevron-down"></i></button>
             </div>
-            
+
             <!-- Actions -->
             <div class="flex flex-col justify-between gap-1 md:gap-2 border-l border-gray-600 pl-4 md:pl-6">
-                <button id="btn-nudge-rotate" class="btn-nudge bg-purple-700 hover:bg-purple-600 p-2 md:p-3 rounded" title="Putar 90&deg;"><i class="fas fa-sync"></i></button>
-                <button id="btn-nudge-close" class="btn-nudge bg-green-700 hover:bg-green-600 p-2 md:p-3 rounded" title="Selesai Geser"><i class="fas fa-check"></i></button>
+                <button id="btn-nudge-rotate" class="btn-nudge bg-purple-700 hover:bg-purple-600 p-2 md:p-3 rounded"
+                    title="Putar 90&deg;"><i class="fas fa-sync"></i></button>
+                <button id="btn-nudge-close" class="btn-nudge bg-green-700 hover:bg-green-600 p-2 md:p-3 rounded"
+                    title="Selesai Geser"><i class="fas fa-check"></i></button>
             </div>
         </div>
 
@@ -564,21 +733,27 @@
         <!-- Start Screen -->
         <div id="start-screen">
             <div class="m-auto w-full max-w-4xl flex flex-col items-center justify-center p-6 md:p-12">
-                <h1 class="text-3xl md:text-5xl font-bold text-blue-400 mb-3 md:mb-4 drop-shadow-lg">BIM Builder Pro</h1>
+                <h1 class="text-3xl md:text-5xl font-bold text-blue-400 mb-3 md:mb-4 drop-shadow-lg">BIM Builder Pro
+                </h1>
                 <p class="text-sm md:text-lg mb-4 md:mb-6 max-w-2xl text-gray-300">
-                    Selamat datang di Simulator Building Information Modeling! Versi Peta Skala Besar. Bangun konstruksi, geser posisi sesuka hati, dan kelola Proyek.
+                    Selamat datang di Simulator Building Information Modeling! Versi Peta Skala Besar. Bangun
+                    konstruksi, geser posisi sesuka hati, dan kelola Proyek.
                 </p>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4 text-left w-full max-w-2xl mb-6 bg-gray-800 p-4 md:p-6 rounded-lg border border-gray-700 shadow-xl">
+                <div
+                    class="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4 text-left w-full max-w-2xl mb-6 bg-gray-800 p-4 md:p-6 rounded-lg border border-gray-700 shadow-xl">
                     <div>
-                        <h3 class="text-base md:text-lg font-bold text-white mb-2"><i class="fas fa-mouse text-blue-400 mr-2"></i> Kontrol Baru</h3>
+                        <h3 class="text-base md:text-lg font-bold text-white mb-2"><i
+                                class="fas fa-mouse text-blue-400 mr-2"></i> Kontrol Baru</h3>
                         <ul class="list-disc pl-5 text-xs md:text-sm text-gray-400 space-y-1">
-                            <li><strong>Pilih & Geser:</strong> Klik elemen, geser dengan tombol panah di layar (D-Pad).</li>
+                            <li><strong>Pilih & Geser:</strong> Klik elemen, geser dengan tombol panah di layar (D-Pad).
+                            </li>
                             <li><strong>Drag:</strong> Putar Kamera</li>
                             <li><strong>Pinch:</strong> Zoom in/out</li>
                         </ul>
                     </div>
                     <div>
-                        <h3 class="text-base md:text-lg font-bold text-white mb-2"><i class="fas fa-bullseye text-red-400 mr-2"></i> Misi Skala Besar</h3>
+                        <h3 class="text-base md:text-lg font-bold text-white mb-2"><i
+                                class="fas fa-bullseye text-red-400 mr-2"></i> Misi Skala Besar</h3>
                         <ul class="list-disc pl-5 text-xs md:text-sm text-gray-400 space-y-1">
                             <li>Area tanah super luas (500x500 meter).</li>
                             <li>Anggaran awal <strong>$5,000,000</strong>.</li>
@@ -586,17 +761,20 @@
                         </ul>
                     </div>
                 </div>
-                
-                <div id="project-list-container" class="w-full max-w-2xl bg-gray-800/90 p-4 rounded-xl border border-gray-700 shadow-xl mb-4 md:mb-6">
-                    <h3 class="text-base md:text-lg font-bold text-white mb-2 md:mb-3 border-b border-gray-600 pb-2 text-left flex items-center justify-between">
+
+                <div id="project-list-container"
+                    class="w-full max-w-2xl bg-gray-800/90 p-4 rounded-xl border border-gray-700 shadow-xl mb-4 md:mb-6">
+                    <h3
+                        class="text-base md:text-lg font-bold text-white mb-2 md:mb-3 border-b border-gray-600 pb-2 text-left flex items-center justify-between">
                         <span><i class="fas fa-folder-open text-yellow-400 mr-2"></i> Proyek Tersimpan</span>
                     </h3>
                     <div id="project-list" class="flex flex-col gap-2 max-h-[30vh] overflow-y-auto pr-2 text-left">
                         <!-- Daftar proyek dimasukkan lewat JS -->
                     </div>
                 </div>
-                
-                <button id="btn-new-project" class="btn text-base md:text-lg px-6 md:px-8 py-3 md:py-4 bg-blue-600 hover:bg-blue-500 rounded-full shadow-[0_0_15px_rgba(37,99,235,0.6)] transform transition hover:scale-105 uppercase tracking-wider w-full max-w-2xl">
+
+                <button id="btn-new-project"
+                    class="btn text-base md:text-lg px-6 md:px-8 py-3 md:py-4 bg-blue-600 hover:bg-blue-500 rounded-full shadow-[0_0_15px_rgba(37,99,235,0.6)] transform transition hover:scale-105 uppercase tracking-wider w-full max-w-2xl">
                     <i class="fas fa-plus mr-2"></i> Buat Proyek Baru
                 </button>
             </div>
@@ -618,14 +796,14 @@
             day: 1,
             maxDays: 365,
             elementsBuilt: 0,
-            targetElements: 200, 
+            targetElements: 200,
             currentTool: 'foundation',
             mode: 'build', // 'build', 'select', 'delete'
             selectedObj: null,
-            currentRotation: 0, 
+            currentRotation: 0,
             gridSize: 1000, // Very large!
             gridDivisions: 200, // 5x5 unit squares visually
-            placedObjects: [], 
+            placedObjects: [],
         };
 
         // Material Definitions
@@ -650,20 +828,20 @@
         const uiPhase = document.getElementById('ui-phase');
         const logContainer = document.getElementById('log-container');
         const toolCards = document.querySelectorAll('.tool-card');
-        
+
         const btnDelete = document.getElementById('btn-delete');
         const btnSelect = document.getElementById('btn-select');
         const btnRotate = document.getElementById('btn-rotate');
-        
+
         const btnUndo = document.getElementById('btn-undo');
         const btnRedo = document.getElementById('btn-redo');
-        
+
         const inspectorData = document.getElementById('inspector-data');
         const inspectorEmpty = document.getElementById('inspector-empty');
         const panelTools = document.getElementById('panel-tools');
         const iconToggleTools = document.getElementById('icon-toggle-tools');
         const dpadContainer = document.getElementById('dpad-container');
-        
+
         // Panel Toggle Logic
         document.getElementById('btn-toggle-tools').addEventListener('click', () => {
             panelTools.classList.toggle('hidden-panel');
@@ -703,7 +881,7 @@
 
         const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
         renderer.setSize(container.clientWidth, container.clientHeight);
-        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); 
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
         renderer.shadowMap.enabled = true;
         renderer.shadowMap.type = THREE.PCFSoftShadowMap;
         container.appendChild(renderer.domElement);
@@ -751,34 +929,34 @@
         // Interaction setup
         const raycaster = new THREE.Raycaster();
         const mouse = new THREE.Vector2();
-        
+
         // CAD-Style Zoom to Cursor (Wheel & Pinch)
         function performCADZoom(clientX, clientY, delta, isPinch = false) {
             const rect = renderer.domElement.getBoundingClientRect();
             mouse.x = ((clientX - rect.left) / rect.width) * 2 - 1;
             mouse.y = -((clientY - rect.top) / rect.height) * 2 + 1;
-            
+
             raycaster.setFromCamera(mouse, camera);
             const intersectables = GAME_STATE.placedObjects.map(o => o.mesh).concat([plane]);
             const intersects = raycaster.intersectObjects(intersectables, true);
-            
+
             if (intersects.length > 0) {
                 const zoomFactor = isPinch ? delta : (delta > 0 ? 1.15 : 0.85);
                 const targetPoint = intersects[0].point;
-                
+
                 const distToTarget = camera.position.distanceTo(targetPoint);
                 const minD = controls.minDistance;
                 const maxD = controls.maxDistance;
-                
+
                 let newDist = distToTarget * zoomFactor;
                 if (newDist < minD) newDist = minD;
                 if (newDist > maxD) newDist = maxD;
-                
+
                 const actualZoom = newDist / distToTarget;
-                
+
                 camera.position.lerpVectors(targetPoint, camera.position, actualZoom);
                 controls.target.lerpVectors(targetPoint, controls.target, actualZoom);
-                
+
                 controls.update();
             } else {
                 const zoomFactor = isPinch ? delta : (delta > 0 ? 1.15 : 0.85);
@@ -797,7 +975,7 @@
             if (e.touches.length === 2) {
                 const dx = e.touches[0].clientX - e.touches[1].clientX;
                 const dy = e.touches[0].clientY - e.touches[1].clientY;
-                initialPinchDist = Math.sqrt(dx*dx + dy*dy);
+                initialPinchDist = Math.sqrt(dx * dx + dy * dy);
             }
         }, { passive: false });
 
@@ -806,22 +984,22 @@
                 e.preventDefault();
                 const dx = e.touches[0].clientX - e.touches[1].clientX;
                 const dy = e.touches[0].clientY - e.touches[1].clientY;
-                const dist = Math.sqrt(dx*dx + dy*dy);
-                
+                const dist = Math.sqrt(dx * dx + dy * dy);
+
                 const centerX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
                 const centerY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
-                
-                const zoomFactor = initialPinchDist / dist; 
+
+                const zoomFactor = initialPinchDist / dist;
                 performCADZoom(centerX, centerY, zoomFactor, true);
-                
-                initialPinchDist = dist; 
+
+                initialPinchDist = dist;
             }
         }, { passive: false });
-        
+
         container.addEventListener('touchend', (e) => {
             if (e.touches.length < 2) initialPinchDist = null;
         });
-        
+
         let rollOverGeo, rollOverMaterial, rollOverMesh;
         rollOverMaterial = new THREE.MeshBasicMaterial({ color: 0x00ff00, opacity: 0.5, transparent: true, wireframe: true });
         rollOverMesh = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), rollOverMaterial);
@@ -838,7 +1016,7 @@
             GAME_STATE.mode = newMode;
             btnDelete.classList.remove('bg-red-800', 'border', 'border-white');
             btnSelect.classList.remove('bg-blue-800', 'border', 'border-white');
-            
+
             if (newMode === 'build') {
                 rollOverMesh.visible = true;
                 deselectObject();
@@ -857,21 +1035,21 @@
         function selectObject(mesh) {
             const obj = GAME_STATE.placedObjects.find(o => o.mesh === mesh);
             if (!obj) return;
-            
+
             GAME_STATE.selectedObj = obj;
             selectionBox.setFromObject(mesh);
             selectionBox.visible = true;
-            
+
             dpadContainer.classList.remove('hidden');
             showInspector(obj.bimData);
-            
+
             // Auto-Focus Camera (Zoom to Object)
             const targetPoint = new THREE.Vector3();
             obj.mesh.getWorldPosition(targetPoint);
-            
+
             const startTarget = controls.target.clone();
             let progress = 0;
-            
+
             function animateFocus() {
                 progress += 0.05;
                 if (progress <= 1) {
@@ -893,32 +1071,32 @@
         function createMeshForTool(type, material) {
             const size = BIM_LIBRARY[type].size;
             const group = new THREE.Group();
-            
+
             if (type === 'pipe') {
-                const geo = new THREE.CylinderGeometry(size[1]/2, size[1]/2, size[0], 16);
+                const geo = new THREE.CylinderGeometry(size[1] / 2, size[1] / 2, size[0], 16);
                 const mesh = new THREE.Mesh(geo, material);
                 mesh.rotation.z = Math.PI / 2;
                 group.add(mesh);
-            } 
+            }
             else if (type === 'foundation') {
-                const baseGeo = new THREE.BoxGeometry(size[0], size[1]*0.4, size[2]);
+                const baseGeo = new THREE.BoxGeometry(size[0], size[1] * 0.4, size[2]);
                 const base = new THREE.Mesh(baseGeo, material);
-                base.position.y = -size[1]*0.3;
-                
-                const topGeo = new THREE.CylinderGeometry(size[0]*0.3, size[0]*0.6, size[1]*0.6, 4);
+                base.position.y = -size[1] * 0.3;
+
+                const topGeo = new THREE.CylinderGeometry(size[0] * 0.3, size[0] * 0.6, size[1] * 0.6, 4);
                 const top = new THREE.Mesh(topGeo, material);
                 top.rotation.y = Math.PI / 4;
-                top.position.y = size[1]*0.2;
-                
+                top.position.y = size[1] * 0.2;
+
                 group.add(base); group.add(top);
             }
             else if (type === 'stair') {
                 const steps = 8;
                 const sD = size[2] / steps;
                 const sH = size[1] / steps;
-                for(let i=0; i<steps; i++) {
+                for (let i = 0; i < steps; i++) {
                     const step = new THREE.Mesh(new THREE.BoxGeometry(size[0], sH, sD), material);
-                    step.position.set(0, -size[1]/2 + sH/2 + (i*sH), -size[2]/2 + sD/2 + (i*sD));
+                    step.position.set(0, -size[1] / 2 + sH / 2 + (i * sH), -size[2] / 2 + sD / 2 + (i * sD));
                     group.add(step);
                 }
             }
@@ -926,29 +1104,29 @@
                 const fMat = new THREE.MeshStandardMaterial({ color: 0x4a2a10 });
                 const fT = 0.15;
                 const fl = new THREE.Mesh(new THREE.BoxGeometry(fT, size[1], size[2]), fMat);
-                fl.position.x = -size[0]/2 + fT/2;
+                fl.position.x = -size[0] / 2 + fT / 2;
                 const fr = new THREE.Mesh(new THREE.BoxGeometry(fT, size[1], size[2]), fMat);
-                fr.position.x = size[0]/2 - fT/2;
+                fr.position.x = size[0] / 2 - fT / 2;
                 const ft = new THREE.Mesh(new THREE.BoxGeometry(size[0], fT, size[2]), fMat);
-                ft.position.y = size[1]/2 - fT/2;
-                
-                const door = new THREE.Mesh(new THREE.BoxGeometry(size[0]-fT*2, size[1]-fT, size[2]*0.2), material);
-                door.position.y = -fT/2;
+                ft.position.y = size[1] / 2 - fT / 2;
+
+                const door = new THREE.Mesh(new THREE.BoxGeometry(size[0] - fT * 2, size[1] - fT, size[2] * 0.2), material);
+                door.position.y = -fT / 2;
                 group.add(fl); group.add(fr); group.add(ft); group.add(door);
             }
             else if (type === 'window') {
                 const fMat = new THREE.MeshStandardMaterial({ color: 0xffffff });
                 const fT = 0.15;
                 const fl = new THREE.Mesh(new THREE.BoxGeometry(fT, size[1], size[2]), fMat);
-                fl.position.x = -size[0]/2 + fT/2;
+                fl.position.x = -size[0] / 2 + fT / 2;
                 const fr = new THREE.Mesh(new THREE.BoxGeometry(fT, size[1], size[2]), fMat);
-                fr.position.x = size[0]/2 - fT/2;
+                fr.position.x = size[0] / 2 - fT / 2;
                 const ft = new THREE.Mesh(new THREE.BoxGeometry(size[0], fT, size[2]), fMat);
-                ft.position.y = size[1]/2 - fT/2;
+                ft.position.y = size[1] / 2 - fT / 2;
                 const fb = new THREE.Mesh(new THREE.BoxGeometry(size[0], fT, size[2]), fMat);
-                fb.position.y = -size[1]/2 + fT/2;
-                
-                const glass = new THREE.Mesh(new THREE.BoxGeometry(size[0]-fT*2, size[1]-fT*2, size[2]*0.2), material);
+                fb.position.y = -size[1] / 2 + fT / 2;
+
+                const glass = new THREE.Mesh(new THREE.BoxGeometry(size[0] - fT * 2, size[1] - fT * 2, size[2] * 0.2), material);
                 group.add(fl); group.add(fr); group.add(ft); group.add(fb); group.add(glass);
             }
             else if (type === 'hvac') {
@@ -961,7 +1139,7 @@
                 const mesh = new THREE.Mesh(new THREE.BoxGeometry(size[0], size[1], size[2]), material);
                 group.add(mesh);
             }
-            
+
             group.traverse(child => {
                 if (child.isMesh) {
                     child.castShadow = true;
@@ -998,7 +1176,7 @@
                 box2.expandByScalar(-0.05);
 
                 if (box1.intersectsBox(box2)) {
-                    if ((newType === 'mep' && existing.bimData.type === 'solid') || 
+                    if ((newType === 'mep' && existing.bimData.type === 'solid') ||
                         (newType === 'solid' && existing.bimData.type === 'mep') ||
                         (newType === 'solid' && existing.bimData.type === 'solid')) {
                         logMessage(`🚨 CLASH: Bentrok dengan ${existing.bimData.name}`, 'error');
@@ -1021,17 +1199,17 @@
             if (checkClash(rollOverMesh)) {
                 rollOverMaterial.color.setHex(0xff0000);
                 setTimeout(() => rollOverMaterial.color.setHex(0x00ff00), 500);
-                return; 
+                return;
             }
 
-            const mat = new THREE.MeshStandardMaterial({ 
-                color: data.color, 
+            const mat = new THREE.MeshStandardMaterial({
+                color: data.color,
                 transparent: data.transparent || false,
                 opacity: data.opacity || 1.0,
                 roughness: 0.7
             });
             const mesh = createMeshForTool(tool, mat);
-            
+
             mesh.position.copy(rollOverMesh.position);
             mesh.rotation.y = GAME_STATE.currentRotation;
             mesh.castShadow = true;
@@ -1051,17 +1229,17 @@
                     volume: (data.size[0] * data.size[1] * data.size[2]).toFixed(2) + ' m³'
                 }
             };
-            
+
             GAME_STATE.placedObjects.push(bimObj);
-            
+
             GAME_STATE.spent += data.cost;
             GAME_STATE.day += data.time;
             GAME_STATE.elementsBuilt++;
-            
+
             updateHUD();
             logMessage(`✅ Terpasang: ${data.name} [${bimObj.bimData.id}]`);
             updateProgress();
-            
+
             recordAction({ type: 'place', obj: bimObj });
         }
 
@@ -1074,12 +1252,12 @@
                 scene.remove(obj.mesh);
                 GAME_STATE.placedObjects.splice(objIndex, 1);
                 GAME_STATE.elementsBuilt--;
-                
+
                 logMessage(`🗑️ Dihapus: ${obj.bimData.name} [${obj.bimData.id}]`, 'warning');
                 updateHUD();
                 updateProgress();
                 hideInspector();
-                
+
                 recordAction({ type: 'delete', obj: obj });
             }
         }
@@ -1087,10 +1265,10 @@
         function updateHUD() {
             uiBudget.innerText = `$${GAME_STATE.spent.toLocaleString()} / $${GAME_STATE.budget.toLocaleString()}`;
             uiBudget.style.color = GAME_STATE.spent > GAME_STATE.budget * 0.8 ? 'var(--warning)' : 'var(--success)';
-            
+
             uiTime.innerText = `Hari ${GAME_STATE.day} / ${GAME_STATE.maxDays}`;
             uiTime.style.color = GAME_STATE.day > GAME_STATE.maxDays ? 'var(--danger)' : 'var(--warning)';
-            
+
             if (GAME_STATE.elementsBuilt > 100) uiPhase.innerText = "Finishing / Kawasan";
             else if (GAME_STATE.elementsBuilt > 20) uiPhase.innerText = "Struktur Atas";
             else uiPhase.innerText = "Pondasi";
@@ -1100,7 +1278,7 @@
             const pct = Math.min(100, Math.round((GAME_STATE.elementsBuilt / GAME_STATE.targetElements) * 100));
             document.getElementById('ui-progress-fill').style.width = `${pct}%`;
             document.getElementById('ui-progress-text').innerText = `${pct}%`;
-            if(pct === 100) logMessage(`🎉 Target Milestone Kawasan Selesai!`, 'success');
+            if (pct === 100) logMessage(`🎉 Target Milestone Kawasan Selesai!`, 'success');
         }
 
         function logMessage(msg, type = 'normal') {
@@ -1114,7 +1292,7 @@
         function showInspector(bimData) {
             inspectorEmpty.classList.add('hidden');
             inspectorData.classList.remove('hidden');
-            
+
             document.getElementById('insp-title').innerText = bimData.name;
             document.getElementById('insp-id').innerText = bimData.id;
             document.getElementById('insp-cat').innerText = bimData.category.toUpperCase();
@@ -1136,7 +1314,7 @@
             if (!object) return null;
             if (object === plane || object === rollOverMesh || object === selectionBox) return object;
             let current = object;
-            while(current.parent && current.parent.type === 'Group') {
+            while (current.parent && current.parent.type === 'Group') {
                 current = current.parent;
             }
             return current;
@@ -1144,7 +1322,7 @@
 
         function getGridSnap(val, size) {
             // Toleransi ukuran kecil (MEP) bebas
-            if (size < 1) return Math.round(val * 2) / 2; 
+            if (size < 1) return Math.round(val * 2) / 2;
             // Ukuran genap (2, 4) pas di garis grid (bilangan bulat)
             if (size % 2 === 0) return Math.round(val);
             // Ukuran ganjil (1, 3) pas di tengah kotak grid (.5)
@@ -1167,7 +1345,7 @@
                     const data = BIM_LIBRARY[GAME_STATE.currentTool];
                     const normal = intersect.face.normal;
                     const p = intersect.point;
-                    
+
                     let w = data.size[0];
                     let h = data.size[1];
                     let d = data.size[2];
@@ -1182,7 +1360,7 @@
                         const box = new THREE.Box3().setFromObject(intersect.object);
                         const cCenter = new THREE.Vector3();
                         box.getCenter(cCenter);
-                        
+
                         // Deteksi ukuran asli blok yang diklik (pembulatan aman)
                         const cW = Math.round((box.max.x - box.min.x) * 10) / 10;
                         const cH = Math.round((box.max.y - box.min.y) * 10) / 10;
@@ -1190,27 +1368,27 @@
 
                         if (Math.abs(normal.y) > 0.5) {
                             // Menempel di atas/bawah
-                            cy = normal.y > 0 ? box.max.y + h/2 : box.min.y - h/2;
+                            cy = normal.y > 0 ? box.max.y + h / 2 : box.min.y - h / 2;
                             cx = (w === cW) ? cCenter.x : getGridSnap(p.x, w);
                             cz = (d === cD) ? cCenter.z : getGridSnap(p.z, d);
                         } else if (Math.abs(normal.x) > 0.5) {
                             // Menempel di samping Kiri/Kanan
-                            cx = normal.x > 0 ? box.max.x + w/2 : box.min.x - w/2;
-                            cy = (h === cH) ? cCenter.y : (Math.round(p.y * 2) / 2 + h/2);
+                            cx = normal.x > 0 ? box.max.x + w / 2 : box.min.x - w / 2;
+                            cy = (h === cH) ? cCenter.y : (Math.round(p.y * 2) / 2 + h / 2);
                             cz = (d === cD) ? cCenter.z : getGridSnap(p.z, d);
                         } else if (Math.abs(normal.z) > 0.5) {
                             // Menempel di samping Depan/Belakang
-                            cz = normal.z > 0 ? box.max.z + d/2 : box.min.z - d/2;
+                            cz = normal.z > 0 ? box.max.z + d / 2 : box.min.z - d / 2;
                             cx = (w === cW) ? cCenter.x : getGridSnap(p.x, w);
-                            cy = (h === cH) ? cCenter.y : (Math.round(p.y * 2) / 2 + h/2);
+                            cy = (h === cH) ? cCenter.y : (Math.round(p.y * 2) / 2 + h / 2);
                         }
                     } else {
                         // Jika diletakkan di tanah kosong, gunakan grid absolut
                         cx = getGridSnap(p.x, w);
                         cz = getGridSnap(p.z, d);
-                        cy = h/2; 
+                        cy = h / 2;
                     }
-                    
+
                     rollOverMesh.position.set(cx, cy, cz);
 
                     if (intersect.object !== plane) {
@@ -1229,14 +1407,14 @@
                                 child.material.emissive.setHex(GAME_STATE.mode === 'delete' ? 0xff0000 : 0x5555ff);
                             }
                         });
-                        setTimeout(() => { 
+                        setTimeout(() => {
                             root.traverse(child => {
                                 if (child.isMesh && child.material && child.material.emissive) {
                                     child.material.emissive.setHex(0x000000);
                                 }
                             });
                         }, 100);
-                        
+
                         const hoveredObj = GAME_STATE.placedObjects.find(obj => obj.mesh === root);
                         if (hoveredObj) showInspector(hoveredObj.bimData);
                     }
@@ -1247,10 +1425,10 @@
         // Klik Ganda untuk Fokus Kamera (Zoom ke Titik)
         container.addEventListener('dblclick', (e) => {
             if (e.target.closest('.panel') || e.target.closest('button') || e.target.closest('#dpad-container')) return;
-            
+
             raycaster.setFromCamera(mouse, camera);
             const intersects = raycaster.intersectObjects([plane, ...GAME_STATE.placedObjects.map(o => o.mesh)], true);
-            
+
             if (intersects.length > 0) {
                 const targetPoint = intersects[0].point;
                 const startTarget = controls.target.clone();
@@ -1290,7 +1468,7 @@
 
             if (intersects.length > 0) {
                 const hitPlane = (intersects[0].object === plane);
-                
+
                 if (GAME_STATE.mode === 'delete' && !hitPlane) {
                     deleteObject(intersects[0]);
                 } else if (GAME_STATE.mode === 'select') {
@@ -1310,18 +1488,18 @@
             const box1 = new THREE.Box3().setFromObject(obj.mesh);
             let bestSnapVal = null;
             let minDistance = 1.5; // Jarak maksimal untuk menarik otomatis
-            
+
             const eps = 0.05;
 
             for (const existing of GAME_STATE.placedObjects) {
                 if (existing === obj) continue;
-                
+
                 const box2 = new THREE.Box3().setFromObject(existing.mesh);
-                
+
                 let alignX = (box1.max.x > box2.min.x + eps && box1.min.x < box2.max.x - eps);
                 let alignY = (box1.max.y > box2.min.y + eps && box1.min.y < box2.max.y - eps);
                 let alignZ = (box1.max.z > box2.min.z + eps && box1.min.z < box2.max.z - eps);
-                
+
                 let dist = Infinity;
                 let snapCenter = null;
                 const width1 = box1.max.x - box1.min.x;
@@ -1330,22 +1508,22 @@
 
                 if (dir === 'x-plus' && alignY && alignZ && box2.min.x >= box1.max.x - eps) {
                     dist = box2.min.x - box1.max.x;
-                    snapCenter = box2.min.x - width1/2;
+                    snapCenter = box2.min.x - width1 / 2;
                 } else if (dir === 'x-minus' && alignY && alignZ && box2.max.x <= box1.min.x + eps) {
                     dist = box1.min.x - box2.max.x;
-                    snapCenter = box2.max.x + width1/2;
+                    snapCenter = box2.max.x + width1 / 2;
                 } else if (dir === 'z-plus' && alignX && alignY && box2.min.z >= box1.max.z - eps) {
                     dist = box2.min.z - box1.max.z;
-                    snapCenter = box2.min.z - depth1/2;
+                    snapCenter = box2.min.z - depth1 / 2;
                 } else if (dir === 'z-minus' && alignX && alignY && box2.max.z <= box1.min.z + eps) {
                     dist = box1.min.z - box2.max.z;
-                    snapCenter = box2.max.z + depth1/2;
+                    snapCenter = box2.max.z + depth1 / 2;
                 } else if (dir === 'y-plus' && alignX && alignZ && box2.min.y >= box1.max.y - eps) {
                     dist = box2.min.y - box1.max.y;
-                    snapCenter = box2.min.y - height1/2;
+                    snapCenter = box2.min.y - height1 / 2;
                 } else if (dir === 'y-minus' && alignX && alignZ && box2.max.y <= box1.min.y + eps) {
                     dist = box1.min.y - box2.max.y;
-                    snapCenter = box2.max.y + height1/2;
+                    snapCenter = box2.max.y + height1 / 2;
                 }
 
                 if (dist >= -eps && dist < minDistance) {
@@ -1353,7 +1531,7 @@
                     bestSnapVal = snapCenter;
                 }
             }
-            
+
             return bestSnapVal !== null ? bestSnapVal : normalStepVal;
         }
 
@@ -1361,10 +1539,10 @@
         document.querySelectorAll('.btn-nudge').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 if (!GAME_STATE.selectedObj) return;
-                
+
                 const dir = btn.dataset.dir;
                 const obj = GAME_STATE.selectedObj;
-                
+
                 // Ambil ukuran asli objek untuk perhitungan snap
                 const data = BIM_LIBRARY[obj.bimData.libKey];
                 let w = data ? data.size[0] : 1;
@@ -1373,13 +1551,13 @@
                     w = data ? data.size[2] : 1;
                     d = data ? data.size[0] : 1;
                 }
-                
+
                 const oldPos = obj.mesh.position.clone();
                 const oldRot = obj.mesh.rotation.y;
-                
+
                 // Jarak geser dihitung dinamis dengan grid snap agar tidak "genjlong"
-                const shift = 0.6; 
-                
+                const shift = 0.6;
+
                 let targetX = obj.mesh.position.x;
                 let targetY = obj.mesh.position.y;
                 let targetZ = obj.mesh.position.z;
@@ -1392,11 +1570,11 @@
                 if (dir === 'y-minus') targetY = getMagneticSnap(obj, dir, oldPos.y - 0.5);
 
                 obj.mesh.position.set(targetX, targetY, targetZ);
-                
+
                 if (btn.id === 'btn-nudge-rotate') {
                     obj.mesh.rotation.y += Math.PI / 2;
                 }
-                
+
                 if (btn.id === 'btn-nudge-close') {
                     deselectObject();
                     return;
@@ -1409,11 +1587,11 @@
                         obj.mesh.position.copy(oldPos);
                         obj.mesh.rotation.y = oldRot;
                         selectionBox.material.color.setHex(0xff0000); // Merah sebentar
-                        setTimeout(() => { if(selectionBox.material) selectionBox.material.color.setHex(0xffff00); }, 300);
+                        setTimeout(() => { if (selectionBox.material) selectionBox.material.color.setHex(0xffff00); }, 300);
                     } else {
                         // Sukses geser
                         selectionBox.setFromObject(obj.mesh);
-                        
+
                         if (!oldPos.equals(obj.mesh.position) || oldRot !== obj.mesh.rotation.y) {
                             recordAction({
                                 type: 'move',
@@ -1435,7 +1613,7 @@
                 setMode('build');
                 toolCards.forEach(c => c.classList.remove('active'));
                 card.classList.add('active');
-                
+
                 GAME_STATE.currentTool = card.dataset.type;
                 updatePreviewMesh(GAME_STATE.currentTool);
             });
@@ -1459,7 +1637,7 @@
             if (e.key.toLowerCase() === 'r') rotateElement();
             if (e.key.toLowerCase() === 'x') setMode('delete');
             if (e.key.toLowerCase() === 's') setMode('select');
-            
+
             if (e.ctrlKey && e.key.toLowerCase() === 'z') {
                 e.preventDefault();
                 undo();
@@ -1469,11 +1647,11 @@
                 redo();
             }
         });
-        
+
         function updateHistoryButtons() {
             if (HISTORY_INDEX >= 0) { btnUndo.classList.remove('opacity-50', 'pointer-events-none'); }
             else { btnUndo.classList.add('opacity-50', 'pointer-events-none'); }
-            
+
             if (HISTORY_INDEX < HISTORY.length - 1) { btnRedo.classList.remove('opacity-50', 'pointer-events-none'); }
             else { btnRedo.classList.add('opacity-50', 'pointer-events-none'); }
         }
@@ -1492,9 +1670,9 @@
                     day: GAME_STATE.day, elementsBuilt: GAME_STATE.elementsBuilt,
                     objects: serializedObjects, lastModified: Date.now()
                 };
-                
+
                 let allProjects = JSON.parse(localStorage.getItem('bim_projects') || '{}');
-                
+
                 if (localStorage.getItem('bim_simulator_save')) {
                     const oldData = JSON.parse(localStorage.getItem('bim_simulator_save'));
                     oldData.id = 'default_legacy';
@@ -1503,7 +1681,7 @@
                     allProjects['default_legacy'] = oldData;
                     localStorage.removeItem('bim_simulator_save');
                 }
-                
+
                 allProjects[GAME_STATE.projectId] = data;
                 localStorage.setItem('bim_projects', JSON.stringify(allProjects));
             } catch (e) { console.error("Gagal save", e); }
@@ -1531,7 +1709,7 @@
                 GAME_STATE.spent = data.spent || 0;
                 GAME_STATE.day = data.day || 1;
                 GAME_STATE.elementsBuilt = data.elementsBuilt || 0;
-                
+
                 data.objects.forEach(savedObj => {
                     const libData = BIM_LIBRARY[savedObj.libKey];
                     if (libData) {
@@ -1548,11 +1726,11 @@
                         mesh.rotation.y = savedObj.ry;
                         mesh.castShadow = true; mesh.receiveShadow = true;
                         scene.add(mesh);
-                        
+
                         GAME_STATE.placedObjects.push({ mesh: mesh, bimData: savedObj.bimData });
                     }
                 });
-                
+
                 updateHUD(); updateProgress();
                 logMessage(`💾 Proyek "${GAME_STATE.projectName}" berhasil dimuat.`, 'success');
                 return true;
@@ -1561,7 +1739,7 @@
 
         function deleteProject(projectId, event) {
             event.stopPropagation();
-            if(confirm("Apakah Anda yakin ingin menghapus proyek ini?")) {
+            if (confirm("Apakah Anda yakin ingin menghapus proyek ini?")) {
                 let allProjects = JSON.parse(localStorage.getItem('bim_projects') || '{}');
                 delete allProjects[projectId];
                 localStorage.setItem('bim_projects', JSON.stringify(allProjects));
@@ -1572,7 +1750,7 @@
         function renderProjectList() {
             const container = document.getElementById('project-list');
             let allProjects = JSON.parse(localStorage.getItem('bim_projects') || '{}');
-            
+
             if (localStorage.getItem('bim_simulator_save')) {
                 const oldData = JSON.parse(localStorage.getItem('bim_simulator_save'));
                 oldData.id = 'default_legacy';
@@ -1582,17 +1760,17 @@
                 localStorage.removeItem('bim_simulator_save');
                 localStorage.setItem('bim_projects', JSON.stringify(allProjects));
             }
-            
-            const projects = Object.values(allProjects).sort((a,b) => b.lastModified - a.lastModified);
-            
+
+            const projects = Object.values(allProjects).sort((a, b) => b.lastModified - a.lastModified);
+
             if (projects.length === 0) {
                 container.innerHTML = '<div class="text-sm text-gray-500 italic text-center p-4 bg-gray-900 rounded">Belum ada proyek tersimpan.</div>';
                 return;
             }
-            
+
             container.innerHTML = '';
             projects.forEach(p => {
-                const date = new Date(p.lastModified).toLocaleString('id-ID', {day: 'numeric', month: 'short', hour: '2-digit', minute:'2-digit'});
+                const date = new Date(p.lastModified).toLocaleString('id-ID', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
                 const btn = document.createElement('div');
                 btn.className = 'w-full flex justify-between items-center bg-gray-700 hover:bg-gray-600 p-3 rounded transition cursor-pointer group';
                 btn.innerHTML = `
@@ -1625,7 +1803,7 @@
         function undo() {
             if (HISTORY_INDEX < 0) return;
             const action = HISTORY[HISTORY_INDEX];
-            
+
             if (action.type === 'place') {
                 scene.remove(action.obj.mesh);
                 const idx = GAME_STATE.placedObjects.indexOf(action.obj);
@@ -1644,7 +1822,7 @@
                 action.obj.mesh.rotation.y = action.oldRot;
                 if (GAME_STATE.selectedObj === action.obj) selectionBox.setFromObject(action.obj.mesh);
             }
-            
+
             updateHUD(); updateProgress(); hideInspector();
             HISTORY_INDEX--; updateHistoryButtons();
             logMessage('⏪ Undo (Ctrl+Z) berhasil', 'warning');
@@ -1655,7 +1833,7 @@
             if (HISTORY_INDEX >= HISTORY.length - 1) return;
             HISTORY_INDEX++;
             const action = HISTORY[HISTORY_INDEX];
-            
+
             if (action.type === 'place') {
                 scene.add(action.obj.mesh);
                 GAME_STATE.placedObjects.push(action.obj);
@@ -1674,7 +1852,7 @@
                 action.obj.mesh.rotation.y = action.newRot;
                 if (GAME_STATE.selectedObj === action.obj) selectionBox.setFromObject(action.obj.mesh);
             }
-            
+
             updateHUD(); updateProgress(); hideInspector();
             updateHistoryButtons();
             logMessage('⏩ Redo (Ctrl+Y) berhasil', 'warning');
@@ -1686,101 +1864,22 @@
 
         // Start New Game
         document.getElementById('btn-new-project').addEventListener('click', () => {
-            const name = prompt("Masukkan nama proyek baru:", "Proyek BIM " + Math.floor(Math.random()*1000));
+            const name = prompt("Masukkan nama proyek baru:", "Proyek BIM " + Math.floor(Math.random() * 1000));
             if (name) {
                 clearScene();
                 GAME_STATE.projectId = 'proj_' + Date.now();
                 GAME_STATE.projectName = name;
-                GAME_STATE.budget = 150000;
+                GAME_STATE.budget = 5000000;
                 GAME_STATE.spent = 0;
                 GAME_STATE.day = 1;
-                GAME_STATE.maxDays = 30;
                 GAME_STATE.elementsBuilt = 0;
                 updateHUD();
                 updateProgress();
                 saveState();
-                
+
                 document.getElementById('start-screen').style.display = 'none';
                 logMessage(`🚀 Proyek baru "${name}" dimulai.`, 'success');
             }
-        });
-
-        function loadTutorialModel() {
-            clearScene();
-            GAME_STATE.projectId = 'tut_' + Date.now();
-            GAME_STATE.projectName = "Tutorial: Konstruksi Dasar";
-            GAME_STATE.budget = 150000;
-            GAME_STATE.spent = 0;
-            GAME_STATE.day = 1;
-            GAME_STATE.maxDays = 30;
-            GAME_STATE.elementsBuilt = 0;
-
-            const makeItem = (type, px, py, pz, ry = 0) => {
-                const data = BIM_LIBRARY[type];
-                if(!data) return;
-                
-                let material;
-                if (data.transparent) {
-                    material = new THREE.MeshLambertMaterial({ color: data.color, transparent: true, opacity: data.opacity });
-                } else if (data.type === 'mep') {
-                    material = new THREE.MeshPhongMaterial({ color: data.color, shininess: 100 });
-                } else {
-                    material = new THREE.MeshStandardMaterial({ color: data.color, roughness: 0.7 });
-                }
-                const mesh = createMeshForTool(type, material);
-                mesh.position.set(px, py, pz);
-                mesh.rotation.y = ry;
-                mesh.castShadow = true; 
-                mesh.receiveShadow = true;
-                scene.add(mesh);
-                
-                const bimObj = {
-                    mesh: mesh,
-                    bimData: {
-                        id: generateBimId(data.category),
-                        libKey: type,
-                        name: data.name,
-                        category: data.category,
-                        cost: data.cost,
-                        time: data.time,
-                        type: data.type,
-                        volume: (data.size[0] * data.size[1] * data.size[2]).toFixed(2) + ' m³'
-                    }
-                };
-                
-                GAME_STATE.placedObjects.push(bimObj);
-                GAME_STATE.spent += data.cost;
-                GAME_STATE.day += data.time;
-                GAME_STATE.elementsBuilt++;
-            };
-
-            // Bangun 4 Pondasi (Tapak)
-            makeItem('foundation', -2.5, 0.5, -2.5);
-            makeItem('foundation', 2.5, 0.5, -2.5);
-            makeItem('foundation', -2.5, 0.5, 2.5);
-            makeItem('foundation', 2.5, 0.5, 2.5);
-            
-            // Bangun 4 Tiang Kolom di atas pondasi (Kolom tingginya 4, dari y=1 fondasi, jadi y=3)
-            makeItem('column', -2.5, 3, -2.5);
-            makeItem('column', 2.5, 3, -2.5);
-            makeItem('column', -2.5, 3, 2.5);
-            makeItem('column', 2.5, 3, 2.5);
-
-            // Bangun dinding arsitektur di sela-sela kolom
-            makeItem('wall-brick', 0, 3, -2.5); // Dinding belakang bata
-            makeItem('wall-glass', -2.5, 3, 0, Math.PI/2); // Dinding kiri kaca
-            makeItem('wall-brick', 2.5, 3, 0, Math.PI/2); // Dinding kanan bata
-            
-            updateHUD();
-            updateProgress();
-            saveState();
-            
-            document.getElementById('start-screen').style.display = 'none';
-            logMessage(`🎓 Mode Tutorial Dimulai. Coba periksa data Kolom di Inspektur BIM dan tes pasang Pipa!`, 'success');
-        }
-
-        document.getElementById('btn-load-tutorial').addEventListener('click', () => {
-            loadTutorialModel();
         });
 
         // Simpan & Keluar ke Dasbor
@@ -1803,12 +1902,12 @@
         // Animation Loop
         function animate() {
             requestAnimationFrame(animate);
-            controls.update(); 
-            
+            controls.update();
+
             if (GAME_STATE.mode === 'build' && rollOverMesh.visible) {
                 rollOverMaterial.opacity = 0.4 + Math.sin(Date.now() * 0.005) * 0.2;
             }
-            
+
             // Animasi efek berdenyut untuk kotak seleksi D-Pad
             if (GAME_STATE.selectedObj && selectionBox.visible) {
                 selectionBox.material.opacity = 0.5 + Math.sin(Date.now() * 0.01) * 0.5;
@@ -1822,4 +1921,5 @@
 
     </script>
 </body>
+
 </html>
