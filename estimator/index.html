@@ -117,6 +117,27 @@
             background: rgba(55, 65, 81, 0.95);
         }
 
+        #btn-toggle-info {
+            position: absolute;
+            left: -32px;
+            top: 16px;
+            width: 32px;
+            height: 40px;
+            background: rgba(31, 41, 55, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-right: none;
+            border-radius: 8px 0 0 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: -5px 0 15px rgba(0,0,0,0.3);
+        }
+        #btn-toggle-info:hover { background: rgba(55, 65, 81, 0.95); }
+        #panel-info { transition: right 0.3s ease-in-out; }
+        #panel-info.hidden-info { right: -320px !important; }
+
         #tools-scroll {
             overflow-y: auto;
             flex-grow: 1;
@@ -277,6 +298,7 @@
             #panel-tools { width: 220px; z-index: 40; top: 60px; bottom: 10px; left: 10px; }
             #panel-tools.hidden-panel { left: -240px; }
             #panel-info { width: 220px; top: 60px; bottom: 10px; right: 10px; height: auto; z-index: 40; }
+            #panel-info.hidden-info { right: -240px !important; }
             #hud-top { width: 90%; top: 10px; padding: 6px 12px; gap: 8px; }
             .panel { padding: 8px; }
             .hud-stat-value { font-size: 0.9rem; }
@@ -309,15 +331,15 @@
             </div>
             
             <div class="hud-stat hidden md:block">
-                <div class="text-[10px] text-gray-400 uppercase tracking-wider">Fase Proyek</div>
+                <div class="text-[10px] text-gray-400 uppercase tracking-wider"><i class="fas fa-flag mr-1"></i>Fase Proyek</div>
                 <div id="ui-phase" class="hud-stat-value text-blue-400">Pondasi</div>
             </div>
             <div class="hud-stat">
-                <div class="text-[10px] text-gray-400 uppercase tracking-wider">Anggaran (5D)</div>
+                <div class="text-[10px] text-gray-400 uppercase tracking-wider hidden md:block"><i class="fas fa-dollar-sign mr-1"></i>Anggaran (5D)</div>
                 <div id="ui-budget" class="hud-stat-value stat-budget">$5,000,000</div>
             </div>
             <div class="hud-stat">
-                <div class="text-[10px] text-gray-400 uppercase tracking-wider">Waktu (4D)</div>
+                <div class="text-[10px] text-gray-400 uppercase tracking-wider hidden md:block"><i class="fas fa-calendar-alt mr-1"></i>Waktu (4D)</div>
                 <div id="ui-time" class="hud-stat-value stat-time">Hari 1 / 365</div>
             </div>
             
@@ -437,23 +459,26 @@
                         <div class="text-[10px] text-gray-400">Biaya: $2,000 | Waktu: 2hr</div>
                     </div>
                 </div>
-            </div>
-
-            <div class="mt-2 pt-3 border-t border-gray-600 flex flex-col gap-2">
-                <button id="btn-select" class="btn btn-secondary text-sm">
-                    <i class="fas fa-hand-pointer"></i> Mode Pilih & Geser (Tap)
-                </button>
-                <button id="btn-rotate" class="btn btn-secondary text-sm">
-                    <i class="fas fa-sync"></i> Putar Elemen Baru (R)
-                </button>
-                <button id="btn-delete" class="btn btn-danger text-sm">
-                    <i class="fas fa-trash"></i> Mode Hapus (X)
-                </button>
+                <!-- Action Buttons -->
+                <div class="mt-2 pt-3 border-t border-gray-600 flex flex-col gap-2 pb-2">
+                    <button id="btn-select" class="btn btn-secondary text-sm">
+                        <i class="fas fa-hand-pointer"></i> Mode Pilih & Geser (Tap)
+                    </button>
+                    <button id="btn-rotate" class="btn btn-secondary text-sm">
+                        <i class="fas fa-sync"></i> Putar Elemen Baru (R)
+                    </button>
+                    <button id="btn-delete" class="btn btn-danger text-sm">
+                        <i class="fas fa-trash"></i> Mode Hapus (X)
+                    </button>
+                </div>
             </div>
         </div>
 
         <!-- UI: Right Panel -->
         <div id="panel-info" class="panel">
+            <button id="btn-toggle-info">
+                <i class="fas fa-chevron-right text-gray-400" id="icon-toggle-info"></i>
+            </button>
             <h2 class="text-lg font-bold mb-2 flex items-center gap-2 border-b border-gray-600 pb-2">
                 <i class="fas fa-search text-green-400"></i> Inspektur BIM
             </h2>
@@ -632,6 +657,23 @@
                 iconToggleTools.classList.replace('fa-chevron-right', 'fa-chevron-left');
             }
         });
+
+        const panelInfo = document.getElementById('panel-info');
+        const iconToggleInfo = document.getElementById('icon-toggle-info');
+        document.getElementById('btn-toggle-info').addEventListener('click', () => {
+            panelInfo.classList.toggle('hidden-info');
+            if (panelInfo.classList.contains('hidden-info')) {
+                iconToggleInfo.classList.replace('fa-chevron-right', 'fa-chevron-left');
+            } else {
+                iconToggleInfo.classList.replace('fa-chevron-left', 'fa-chevron-right');
+            }
+        });
+
+        // Auto-hide right panel on mobile startup for wider view
+        if (window.innerWidth <= 768) {
+            panelInfo.classList.add('hidden-info');
+            iconToggleInfo.classList.replace('fa-chevron-right', 'fa-chevron-left');
+        }
 
         // Three.js Setup
         const container = document.getElementById('canvas-container');
